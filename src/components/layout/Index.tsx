@@ -1,25 +1,27 @@
-import { Component, JSX, createSignal } from "solid-js";
+import { Component, JSX, createSignal, onMount } from "solid-js";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { useAuth } from "../../services/authStore";
 
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "./Footer";
+import { navigationAPI } from "./navigation";
+import type { NavigationItem } from "./navigation";
 
 import "./style.css";
-
-const navItems = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "Crops", path: "/crops" },
-  { label: "Dissemination", path: "/dissemination" },
-  { label: "Analytics", path: "/analytics" },
-  { label: "Reports", path: "/reports" },
-];
 
 interface LayoutProps {
   children: JSX.Element;
   pageTitle?: string;
 }
+
+const filterReadableMenus = (items: NavigationItem[]): NavigationItem[] =>
+  items
+    .filter((item) => item.permissions?.can_read)
+    .map((item) => ({
+      ...item,
+      children: filterReadableMenus(item.children || []),
+    }));
 
 const Layout: Component<LayoutProps> = (props) => {
   const navigate = useNavigate();
@@ -27,21 +29,55 @@ const Layout: Component<LayoutProps> = (props) => {
   const auth = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  const [navItems, setNavItems] = createSignal<NavigationItem[]>([]);
+  const [isNavLoading, setIsNavLoading] = createSignal(false);
+  const [navError, setNavError] = createSignal<string | null>(null);
 
-  const isActive = (path: string) =>
-    location.pathname.startsWith(path);
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const fetchNavigation = async () => {
+    if (!auth.isAuthenticated()) {
+      setNavItems([]);
+      return;
+    }
+
+    setIsNavLoading(true);
+    setNavError(null);
+
+    try {
+      const result = await navigationAPI.getMyNavigation();
+
+      if (result.success && result.data) {
+        setNavItems(filterReadableMenus(result.data));
+      } else {
+        setNavItems([]);
+        setNavError(result.error || result.message || "Failed to load navigation");
+      }
+    } catch (error) {
+      setNavItems([]);
+      setNavError(
+        error instanceof Error ? error.message : "Failed to load navigation",
+      );
+    } finally {
+      setIsNavLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     auth.logout();
     navigate("/login");
   };
 
+  onMount(fetchNavigation);
+
   return (
     <div class="agri-shell">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        navItems={navItems}
+        navItems={navItems()}
+        isLoading={isNavLoading()}
+        error={navError()}
         isActive={isActive}
         onLogout={handleLogout}
       />

@@ -6,7 +6,7 @@
 import { Route } from '@solidjs/router';
 import { authRoutes } from '../pages/auth/routes';
 import { dashboardRoutes } from '../pages/dashboard/routes';
-import { userRoutes } from '../pages/user/routes';
+import { userRoutes } from '../pages/master-data/user/routes';
 import Layout from '../components/layout/Index';
 import { ParentComponent } from 'solid-js';
 /**
