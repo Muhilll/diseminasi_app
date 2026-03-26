@@ -4,9 +4,6 @@
  */
 
 import { api } from '../../../../services/api';
-import { Grade } from '../../grade/services/types';
-import { Position } from '../../position/services/types';
-import { Role } from '../../role/services/types';
 import type {
   User,
   CreateUserInput,
@@ -23,13 +20,6 @@ export const userAPI = {
    * Get user by ID
    */
   getById: (id: string) => api.get<User>(`/users/${id}`),
-
-  /**
-   * Get dropdown options
-   */
-  getGrades: () => api.get<Grade[]>('/grades'),
-  getPositions: () => api.get<Position[]>('/positions'),
-  getRoles: () => api.get<Role[]>('/roles'),
 
   /**
    * Create a new user

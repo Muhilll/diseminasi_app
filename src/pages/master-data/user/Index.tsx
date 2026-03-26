@@ -3,6 +3,11 @@
  * Styled to match the AgriIntel Dissemination List design
  */
 import { Component, Show, createSignal, onMount } from "solid-js";
+import ConfirmModal from "../../../components/ui/ConfirmModal";
+import Modal from "../../../components/ui/Modal";
+import PageHeader from "../../../components/ui/PageHeader";
+import Toast from "../../../components/ui/Toast";
+import { useToast } from "../../../hooks/useToast";
 import UserTable from "./Data";
 import UserForm from "./Form";
 import { userAPI } from "./services/api";
@@ -32,17 +37,7 @@ const UserPage: Component = () => {
   const [editingUser, setEditingUser] = createSignal<User | null>(null);
   const [showForm, setShowForm] = createSignal(false);
   const [deletingUserId, setDeletingUserId] = createSignal<string | null>(null);
-  const [toast, setToast] = createSignal<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    window.setTimeout(() => {
-      setToast((current) => (current?.message === message ? null : current));
-    }, 3000);
-  };
+  const { toast, showToast, clearToast } = useToast();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -144,88 +139,54 @@ const UserPage: Component = () => {
 
   return (
     <div class="user-page">
-      <Show when={toast()}>
-        <div class={`app-toast app-toast-${toast()!.type}`}>
-          <span>{toast()!.message}</span>
-          <button type="button" class="app-toast-close" onClick={() => setToast(null)}>
-            x
+      <Toast toast={toast()} onClose={clearToast} />
+
+      <PageHeader
+        title="User Management"
+        description="Managing the strategic distribution of users across the system."
+        action={
+          <button
+            class="btn-create"
+            onClick={() => {
+              setShowForm(true);
+              setEditingUser(null);
+            }}
+          >
+            <IconPlusCircle />
+            Add New User
           </button>
-        </div>
-      </Show>
-
-      <div class="page-header">
-        <div class="page-header-left">
-          <h1>User Management</h1>
-          <p>Managing the strategic distribution of users across the system.</p>
-        </div>
-
-        <button
-          class="btn-create"
-          onClick={() => {
-            setShowForm(true);
-            setEditingUser(null);
-          }}
-        >
-          <IconPlusCircle />
-          Add New User
-        </button>
-      </div>
+        }
+      />
 
       <Show when={error()}>
         <div class="error-message">{error()}</div>
       </Show>
 
-      <Show when={showForm()}>
-        <div class="modal-overlay" onClick={handleCancel}>
-          <div class="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div class="form-section">
-              <div class="form-section-header">
-                <h2>{editingUser() ? "Edit User" : "Add New User"}</h2>
-                <button onClick={handleCancel} class="btn-secondary" type="button">
-                  Cancel
-                </button>
-              </div>
-              <UserForm
-                initialData={editingUser() || undefined}
-                onSubmit={handleSubmit}
-                isLoading={isLoading()}
-              />
-            </div>
+      <Modal open={showForm()} onClose={handleCancel}>
+        <div class="form-section">
+          <div class="form-section-header">
+            <h2>{editingUser() ? "Edit User" : "Add New User"}</h2>
+            <button onClick={handleCancel} class="btn-secondary" type="button">
+              Cancel
+            </button>
           </div>
+          <UserForm
+            initialData={editingUser() || undefined}
+            onSubmit={handleSubmit}
+            isLoading={isLoading()}
+          />
         </div>
-      </Show>
+      </Modal>
 
-      <Show when={deletingUserId()}>
-        <div class="modal-overlay" onClick={() => setDeletingUserId(null)}>
-          <div class="modal-card modal-card-confirm" onClick={(e) => e.stopPropagation()}>
-            <div class="form-section">
-              <div class="form-section-header">
-                <h2>Delete User</h2>
-              </div>
-              <p class="confirm-message">
-                Are you sure you want to delete this user? This action cannot be undone.
-              </p>
-              <div class="confirm-actions">
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  onClick={() => setDeletingUserId(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  class="btn-danger"
-                  onClick={handleDeleteConfirm}
-                  disabled={isLoading()}
-                >
-                  {isLoading() ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Show>
+      <ConfirmModal
+        open={!!deletingUserId()}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmLabel={isLoading() ? "Deleting..." : "Delete"}
+        confirmLoading={isLoading()}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeletingUserId(null)}
+      />
 
       <UserTable
         users={users()}

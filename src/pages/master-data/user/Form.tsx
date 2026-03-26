@@ -1,5 +1,6 @@
 import { Component, createEffect, createSignal, onMount } from "solid-js";
-import { userAPI } from "./services/api";
+import LookupSelect from "../../../components/ui/LookupSelect";
+import { lookupAPI } from "../../../services/lookups";
 import type {
   User,
   UserFormData,
@@ -61,9 +62,9 @@ const UserForm: Component<UserFormProps> = (props) => {
 
     try {
       const [gradesResult, positionsResult, rolesResult] = await Promise.all([
-        userAPI.getGrades(),
-        userAPI.getPositions(),
-        userAPI.getRoles(),
+        lookupAPI.getGrades(),
+        lookupAPI.getPositions(),
+        lookupAPI.getRoles(),
       ]);
 
       if (gradesResult.success && gradesResult.data) {
@@ -138,68 +139,44 @@ const UserForm: Component<UserFormProps> = (props) => {
         />
       </div>
 
-      <div class="form-group">
-        <label for="grade_id">Grade ID</label>
-        <select
-          id="grade_id"
-          value={String(formData().grade_id)}
-          onChange={(e) => handleChange("grade_id", e.target.value)}
-          required
-          disabled={props.isLoading || isOptionsLoading()}
-        >
-          <option value="">Select grade</option>
-          {grades().map((grade) => (
-            <option
-              value={String(grade.id)}
-              selected={String(formData().grade_id) === String(grade.id)}
-            >
-              {grade.grade} - {grade.des}
-            </option>
-          ))}
-        </select>
-      </div>
+      <LookupSelect
+        id="grade_id"
+        label="Grade ID"
+        value={String(formData().grade_id)}
+        options={grades()}
+        placeholder="Select grade"
+        required
+        disabled={props.isLoading || isOptionsLoading()}
+        getValue={(grade) => String(grade.id)}
+        getLabel={(grade) => `${grade.grade} - ${grade.des}`}
+        onChange={(value) => handleChange("grade_id", value)}
+      />
 
-      <div class="form-group">
-        <label for="position_id">Position ID</label>
-        <select
-          id="position_id"
-          value={String(formData().position_id)}
-          onChange={(e) => handleChange("position_id", e.target.value)}
-          required
-          disabled={props.isLoading || isOptionsLoading()}
-        >
-          <option value="">Select position</option>
-          {positions().map((position) => (
-            <option
-              value={String(position.id)}
-              selected={String(formData().position_id) === String(position.id)}
-            >
-              {position.des}
-            </option>
-          ))}
-        </select>
-      </div>
+      <LookupSelect
+        id="position_id"
+        label="Position ID"
+        value={String(formData().position_id)}
+        options={positions()}
+        placeholder="Select position"
+        required
+        disabled={props.isLoading || isOptionsLoading()}
+        getValue={(position) => String(position.id)}
+        getLabel={(position) => position.des}
+        onChange={(value) => handleChange("position_id", value)}
+      />
 
-      <div class="form-group">
-        <label for="role_id">Role ID</label>
-        <select
-          id="role_id"
-          value={String(formData().role_id)}
-          onChange={(e) => handleChange("role_id", e.target.value)}
-          required
-          disabled={props.isLoading || isOptionsLoading()}
-        >
-          <option value="">Select role</option>
-          {roles().map((role) => (
-            <option
-              value={String(role.id)}
-              selected={String(formData().role_id) === String(role.id)}
-            >
-              {role.name} ({role.code})
-            </option>
-          ))}
-        </select>
-      </div>
+      <LookupSelect
+        id="role_id"
+        label="Role ID"
+        value={String(formData().role_id)}
+        options={roles()}
+        placeholder="Select role"
+        required
+        disabled={props.isLoading || isOptionsLoading()}
+        getValue={(role) => String(role.id)}
+        getLabel={(role) => `${role.name} (${role.code})`}
+        onChange={(value) => handleChange("role_id", value)}
+      />
 
       <div class="form-group">
         <label for="signature_image">Signature Image URL</label>

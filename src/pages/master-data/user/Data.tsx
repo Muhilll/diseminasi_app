@@ -1,4 +1,5 @@
-import { Component, For, Show, createSignal } from "solid-js";
+import { Component } from "solid-js";
+import DataTable, { type DataTableColumn } from "../../../components/ui/DataTable";
 import type { User } from "./services/types";
 
 interface UserTableProps {
@@ -43,38 +44,6 @@ const IconTrash = () => (
   </svg>
 );
 
-const IconChevronLeft = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const IconChevronRight = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
-
-const ITEMS_PER_PAGE = 10;
-
 const formatDate = (value: string) => {
   if (!value) return "-";
 
@@ -91,153 +60,46 @@ const formatDate = (value: string) => {
 };
 
 const UserTable: Component<UserTableProps> = (props) => {
-  const [page, setPage] = createSignal(1);
-
-  const totalPages = () =>
-    Math.max(1, Math.ceil(props.users.length / ITEMS_PER_PAGE));
-
-  const pagedUsers = () => {
-    const start = (page() - 1) * ITEMS_PER_PAGE;
-    return props.users.slice(start, start + ITEMS_PER_PAGE);
-  };
-
-  const pageNumbers = (): (number | "...")[] => {
-    const total = totalPages();
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-
-    const current = page();
-    const pages = new Set(
-      [1, total, current - 1, current, current + 1].filter(
-        (value) => value >= 1 && value <= total
-      )
-    );
-
-    const sortedPages = [...pages].sort((a, b) => a - b);
-    const result: (number | "...")[] = [];
-
-    sortedPages.forEach((value, index) => {
-      if (index > 0 && value - sortedPages[index - 1] > 1) {
-        result.push("...");
-      }
-      result.push(value);
-    });
-
-    return result;
-  };
-
-  const startEntry = () =>
-    props.users.length === 0 ? 0 : (page() - 1) * ITEMS_PER_PAGE + 1;
-  const endEntry = () => Math.min(page() * ITEMS_PER_PAGE, props.users.length);
+  const columns: DataTableColumn<User>[] = [
+    { header: "ID", cell: (user) => <>{user.id}</> },
+    { header: "Name", cell: (user) => <>{user.name}</> },
+    { header: "Email", cell: (user) => <>{user.email}</> },
+    { header: "Employee ID", cell: (user) => <>{user.employee_id}</> },
+    { header: "Role", cell: (user) => <>{user.role?.name || user.role_id}</> },
+    { header: "Grade", cell: (user) => <>{user.grade?.grade || user.grade_id}</> },
+    { header: "Position", cell: (user) => <>{user.position?.des || user.position_id}</> },
+    { header: "Signature", cell: (user) => <>{user.signature_image ? "Available" : "-"}</> },
+    { header: "Created At", cell: (user) => <>{formatDate(user.created_at)}</> },
+    { header: "Updated At", cell: (user) => <>{formatDate(user.updated_at)}</> },
+    {
+      header: "Actions",
+      headerStyle: { "text-align": "right" },
+      cellClass: "td-actions",
+      cell: (user) => (
+        <div class="action-btns">
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(user)}>
+            <IconEdit />
+          </button>
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            onClick={() => props.onDelete(String(user.id))}
+          >
+            <IconTrash />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div class="app-table-card">
-      <Show when={props.isLoading}>
-        <div class="table-loading">Loading...</div>
-      </Show>
-
-      <Show when={!props.isLoading}>
-        <Show
-          when={props.users.length > 0}
-          fallback={<div class="table-empty">No users found.</div>}
-        >
-          <div class="app-table-scroll">
-            <table class="app-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Employee ID</th>
-                  <th>Role</th>
-                  <th>Grade</th>
-                  <th>Position</th>
-                  <th>Signature</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
-                  <th style="text-align:right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={pagedUsers()}>
-                  {(user) => (
-                    <tr>
-                      <td>{user.id}</td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>{user.employee_id}</td>
-                      <td>{user.role?.name || user.role_id}</td>
-                      <td>{user.grade?.grade || user.grade_id}</td>
-                      <td>{user.position?.des || user.position_id}</td>
-                      <td>{user.signature_image ? "Available" : "-"}</td>
-                      <td>{formatDate(user.created_at)}</td>
-                      <td>{formatDate(user.updated_at)}</td>
-                      <td class="td-actions">
-                        <div class="action-btns">
-                          <button
-                            class="btn-icon btn-edit"
-                            title="Edit"
-                            onClick={() => props.onEdit(user)}
-                          >
-                            <IconEdit />
-                          </button>
-                          <button
-                            class="btn-icon btn-delete"
-                            title="Delete"
-                            onClick={() => props.onDelete(String(user.id))}
-                          >
-                            <IconTrash />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="table-footer">
-            <span class="pagination-info">
-              Showing <strong>{startEntry()}</strong> to <strong>{endEntry()}</strong> of{" "}
-              <strong>{props.users.length}</strong> entries
-            </span>
-
-            <nav class="pagination-nav">
-              <button
-                class="page-btn"
-                disabled={page() === 1}
-                onClick={() => setPage((current) => current - 1)}
-              >
-                <IconChevronLeft />
-              </button>
-
-              <For each={pageNumbers()}>
-                {(item) =>
-                  item === "..." ? (
-                    <span class="page-dots">...</span>
-                  ) : (
-                    <button
-                      class={`page-btn${page() === item ? " active" : ""}`}
-                      onClick={() => setPage(item as number)}
-                    >
-                      {item}
-                    </button>
-                  )
-                }
-              </For>
-
-              <button
-                class="page-btn"
-                disabled={page() === totalPages()}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                <IconChevronRight />
-              </button>
-            </nav>
-          </div>
-        </Show>
-      </Show>
-    </div>
+    <DataTable
+      rows={props.users}
+      columns={columns}
+      isLoading={props.isLoading}
+      emptyMessage="No users found."
+      itemsPerPage={10}
+    />
   );
 };
 
