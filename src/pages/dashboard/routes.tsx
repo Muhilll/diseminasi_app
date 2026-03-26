@@ -4,10 +4,12 @@
  */
 
 import { Route } from '@solidjs/router';
-import DashboardPage from './DashboardPage';
+import { lazy } from 'solid-js';
+import ProtectedPage from '../../router/ProtectedRoute';
+const DashboardPage = lazy(() => import('./DashboardPage'));
 
 export const dashboardRoutes = (
   <>
-    <Route path="/dashboard" component={DashboardPage} />
+    <Route path="/dashboard" component={() => <ProtectedPage><DashboardPage /></ProtectedPage>} />
   </>
 );

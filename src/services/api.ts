@@ -9,6 +9,32 @@ interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string;
+}
+
+/**
+ * Get auth headers with token and app token
+ */
+function getAuthHeaders(includeAppToken: boolean = true): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Get JWT token from localStorage
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Add app token from environment variable (optional, for protected endpoints)
+  if (includeAppToken) {
+    const appToken = import.meta.env.VITE_APP_TOKEN;
+    if (appToken) {
+      headers['X-App-Token'] = appToken;
+    }
+  }
+
+  return headers;
 }
 
 export async function apiCall<T>(
@@ -16,9 +42,13 @@ export async function apiCall<T>(
   options?: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
+    // Only include app token for requests with JWT token (authenticated/protected endpoints)
+    const token = localStorage.getItem('authToken');
+    const includeAppToken = !!token;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
-        'Content-Type': 'application/json',
+        ...getAuthHeaders(includeAppToken),
         ...options?.headers,
       },
       ...options,
@@ -28,8 +58,10 @@ export async function apiCall<T>(
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    return { success: true, data };
+    const json = await response.json();
+    // Extract the actual data from response, handle both wrapped and direct responses
+    const data = json.data !== undefined ? json.data : json;
+    return { success: json.success, data, message: json.message };
   } catch (error) {
     return {
       success: false,
@@ -47,3 +79,4 @@ export const api = {
   delete: <T,>(endpoint: string) =>
     apiCall<T>(endpoint, { method: 'DELETE' }),
 };
+

@@ -1,31 +1,26 @@
 /**
- * Protected Route Component
- * Wrapper for components that require authentication
+ * Protected Page Component
+ * Wrapper for page components that require authentication
  */
 
-import { Show, Component, JSX } from "solid-js";
-import { useNavigate } from '@solidjs/router';
+import { Component, JSX, Show, createMemo } from "solid-js";
+import { useAuth } from '../services/authStore';
 
-interface ProtectedComponentProps {
+interface ProtectedPageProps {
   children: JSX.Element;
-  isAuthenticated?: boolean;
 }
 
-const ProtectedComponent: Component<ProtectedComponentProps> = (props) => {
-  const navigate = useNavigate();
-  
-  // Check if authenticated
-  const isAuth = () => {
-    return props.isAuthenticated || !!localStorage.getItem('authToken');
-  };
+const ProtectedPage: Component<ProtectedPageProps> = (props) => {
+  const auth = useAuth();
 
-  // Redirect to login if not authenticated
-  if (!isAuth()) {
-    navigate('/login', { replace: true });
-    return null;
-  }
+  // Check if authenticated - use memo to reactively check
+  const isAuthenticated = createMemo(() => auth.isAuthenticated());
 
-  return <>{props.children}</>;
+  return (
+    <Show when={isAuthenticated()}>
+      {props.children}
+    </Show>
+  );
 };
 
-export default ProtectedComponent;
+export default ProtectedPage;

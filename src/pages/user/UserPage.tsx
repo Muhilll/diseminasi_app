@@ -3,15 +3,17 @@
  * Main page for user management
  */
 
-import { Component, createSignal, onMount, For } from 'solid-js';
-import type { User, UserFormData } from './types';
-import { userAPI } from './api';
-import UserForm from './UserForm';
+import { Component, createSignal, onMount, For, Show } from "solid-js";
+import type { User, UserFormData } from "./types";
+import { userAPI } from "./api";
+import UserForm from "./UserForm";
 
 const UserPage: Component = () => {
   const [users, setUsers] = createSignal<User[]>([]);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const [editingUser, setEditingUser] = createSignal<User | null>(null);
+  const [showForm, setShowForm] = createSignal(false);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -21,10 +23,10 @@ const UserPage: Component = () => {
       if (result.success && result.data) {
         setUsers(result.data);
       } else {
-        setError(result.error || 'Failed to fetch users');
+        setError(result.error || "Failed to fetch users");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
@@ -34,21 +36,46 @@ const UserPage: Component = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await userAPI.create(data);
-      if (result.success) {
-        await fetchUsers();
+      if (editingUser()) {
+        // Update existing user
+        const result = await userAPI.update(String(editingUser()!.id), data);
+        if (result.success) {
+          setEditingUser(null);
+          setShowForm(false);
+          await fetchUsers();
+        } else {
+          setError(result.error || "Failed to update user");
+        }
       } else {
-        setError(result.error || 'Failed to create user');
+        // Create new user
+        const result = await userAPI.create(data);
+        if (result.success) {
+          setShowForm(false);
+          await fetchUsers();
+        } else {
+          setError(result.error || "Failed to create user");
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setShowForm(true);
+    setError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUser(null);
+    setShowForm(false);
+  };
+
   const handleDeleteUser = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm("Are you sure you want to delete this user?")) return;
 
     setIsLoading(true);
     setError(null);
@@ -57,10 +84,10 @@ const UserPage: Component = () => {
       if (result.success) {
         await fetchUsers();
       } else {
-        setError(result.error || 'Failed to delete user');
+        setError(result.error || "Failed to delete user");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +104,28 @@ const UserPage: Component = () => {
       {error() && <div class="error-message">{error()}</div>}
 
       <section class="user-form-section">
-        <h2>Add New User</h2>
-        <UserForm onSubmit={handleAddUser} isLoading={isLoading()} />
-      </section>
+        <div class="form-header">
+          <h2>{editingUser() ? "Edit User" : "Add New User"}</h2>
+          <Show when={editingUser()}>
+            <button onClick={handleCancelEdit} class="btn-secondary">
+              Cancel
+            </button>
+          </Show>
+          <Show when={!showForm()}>
+            <button onClick={() => setShowForm(true)} class="btn-primary">
+              + Add New User
+            </button>
+          </Show>
+        </div>
+
+        <Show when={showForm()}>
+          <UserForm
+            initialData={editingUser() || undefined}
+            onSubmit={handleAddUser}
+            isLoading={isLoading()}
+          />
+        </Show>
+      </section>  
 
       <section class="users-list-section">
         <h2>Users List</h2>
@@ -113,7 +159,16 @@ const UserPage: Component = () => {
                     <td>{user.grade_id}</td>
                     <td>{user.role_id}</td>
                     <td>
-                      <button onClick={() => handleDeleteUser(user.id)}>
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        class="btn-edit"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        class="btn-delete"
+                      >
                         Delete
                       </button>
                     </td>
