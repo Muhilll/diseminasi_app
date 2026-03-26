@@ -1,14 +1,11 @@
-import { Router, Route } from "@solidjs/router";
+import { Router } from "@solidjs/router";
 import type { Component } from "solid-js";
-import Comp from "./Comp";
-import Dashboard from "./pages/Dashboard";
-import IndexPage from "./pages/Index";
+import { routeConfig } from "./router";
 
 const App: Component = () => {
   return (
     <Router>
-      <Route path="/" component={IndexPage} />
-      <Route path="/dashboard" component={Dashboard} />
+      {routeConfig}
     </Router>
   );
 };
