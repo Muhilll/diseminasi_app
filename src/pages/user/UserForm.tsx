@@ -1,10 +1,5 @@
-/**
- * User Form Component
- * Form for creating and updating users
- */
-
 import { Component, createSignal } from 'solid-js';
-import type { UserFormData, User } from './types';
+import type { UserFormData, User } from './services/types';
 
 interface UserFormProps {
   initialData?: User;

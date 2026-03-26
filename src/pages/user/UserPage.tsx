@@ -1,11 +1,6 @@
-/**
- * User Page
- * Main page for user management
- */
-
 import { Component, createSignal, onMount, For, Show } from "solid-js";
-import type { User, UserFormData } from "./types";
-import { userAPI } from "./api";
+import type { User, UserFormData } from "./services/types";
+import { userAPI } from "./services/api";
 import UserForm from "./UserForm";
 
 const UserPage: Component = () => {

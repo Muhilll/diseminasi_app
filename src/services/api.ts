@@ -3,7 +3,8 @@
  * Centralized API calls and configurations
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -15,22 +16,24 @@ interface ApiResponse<T> {
 /**
  * Get auth headers with token and app token
  */
-function getAuthHeaders(includeAppToken: boolean = true): Record<string, string> {
+function getAuthHeaders(
+  includeAppToken: boolean = true,
+): Record<string, string> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
   // Get JWT token from localStorage
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Add app token from environment variable (optional, for protected endpoints)
   if (includeAppToken) {
     const appToken = import.meta.env.VITE_APP_TOKEN;
     if (appToken) {
-      headers['X-App-Token'] = appToken;
+      headers["X-App-Token"] = appToken;
     }
   }
 
@@ -39,11 +42,11 @@ function getAuthHeaders(includeAppToken: boolean = true): Record<string, string>
 
 export async function apiCall<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<ApiResponse<T>> {
   try {
     // Only include app token for requests with JWT token (authenticated/protected endpoints)
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     const includeAppToken = !!token;
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -65,18 +68,16 @@ export async function apiCall<T>(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
 
 export const api = {
-  get: <T,>(endpoint: string) => apiCall<T>(endpoint, { method: 'GET' }),
-  post: <T,>(endpoint: string, body: unknown) =>
-    apiCall<T>(endpoint, { method: 'POST', body: JSON.stringify(body) }),
-  put: <T,>(endpoint: string, body: unknown) =>
-    apiCall<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: <T,>(endpoint: string) =>
-    apiCall<T>(endpoint, { method: 'DELETE' }),
+  get: <T>(endpoint: string) => apiCall<T>(endpoint, { method: "GET" }),
+  post: <T>(endpoint: string, body: unknown) =>
+    apiCall<T>(endpoint, { method: "POST", body: JSON.stringify(body) }),
+  put: <T>(endpoint: string, body: unknown) =>
+    apiCall<T>(endpoint, { method: "PUT", body: JSON.stringify(body) }),
+  delete: <T>(endpoint: string) => apiCall<T>(endpoint, { method: "DELETE" }),
 };
-

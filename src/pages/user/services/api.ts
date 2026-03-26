@@ -3,7 +3,7 @@
  * API calls related to user management
  */
 
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
 import type { User, CreateUserInput, UpdateUserInput } from './types';
 
 export const userAPI = {

@@ -6,7 +6,7 @@
 import { Route } from '@solidjs/router';
 import { lazy } from 'solid-js';
 import ProtectedPage from '../../router/ProtectedRoute';
-const UserPage = lazy(() => import('./UserPage'));
+import UserPage from './UserPage';
 
 export const userRoutes = (
   <>
