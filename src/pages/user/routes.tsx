@@ -4,9 +4,8 @@
  */
 
 import { Route } from '@solidjs/router';
-import { lazy } from 'solid-js';
 import ProtectedPage from '../../router/ProtectedRoute';
-import UserPage from './UserPage';
+import UserPage from './Index';
 
 export const userRoutes = (
   <>
