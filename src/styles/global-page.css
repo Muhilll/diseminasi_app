@@ -232,6 +232,28 @@ body {
   border-color: var(--gray-400);
 }
 
+.btn-danger {
+  padding: 8px 16px;
+  background: var(--red-600);
+  color: #fff;
+  border: 1px solid var(--red-600);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .error-message {
   display: flex;
   align-items: center;
@@ -244,6 +266,60 @@ body {
   font-size: 13.5px;
   font-weight: 500;
   margin-bottom: 20px;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: var(--gray-700);
+  margin-bottom: 20px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-card-confirm {
+  width: min(440px, 100%);
+}
+
+.app-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  color: #fff;
+}
+
+.app-toast-success {
+  background: var(--green-800);
+}
+
+.app-toast-error {
+  background: var(--red-600);
+}
+
+.app-toast-close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.app-toast-close:hover {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -279,5 +355,23 @@ body {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+
+  .confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-danger,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .app-toast {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    min-width: 0;
+    max-width: none;
   }
 }
