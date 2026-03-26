@@ -49,7 +49,10 @@ const UserPage: Component = () => {
     try {
       let result;
       if (editingUser()) {
-        result = await userAPI.update(String(editingUser()!.id), data);
+        const updatePayload = data.password
+          ? data
+          : { ...data, password: undefined };
+        result = await userAPI.update(String(editingUser()!.id), updatePayload);
       } else {
         result = await userAPI.create(data);
       }
@@ -108,15 +111,13 @@ const UserPage: Component = () => {
           <p>Managing the strategic distribution of users across the system.</p>
         </div>
 
-        <Show when={!showForm()}>
-          <button
-            class="btn-create"
-            onClick={() => { setShowForm(true); setEditingUser(null); }}
-          >
-            <IconPlusCircle />
-            Add New User
-          </button>
-        </Show>
+        <button
+          class="btn-create"
+          onClick={() => { setShowForm(true); setEditingUser(null); }}
+        >
+          <IconPlusCircle />
+          Add New User
+        </button>
       </div>
 
       {/* ── Error ────────────────────────────────────────── */}
@@ -126,18 +127,22 @@ const UserPage: Component = () => {
 
       {/* ── Add / Edit Form ──────────────────────────────── */}
       <Show when={showForm()}>
-        <div class="form-section">
-          <div class="form-section-header">
-            <h2>{editingUser() ? "Edit User" : "Add New User"}</h2>
-            <button onClick={handleCancel} class="btn-secondary">
-              Cancel
-            </button>
+        <div class="modal-overlay" onClick={handleCancel}>
+          <div class="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div class="form-section">
+              <div class="form-section-header">
+                <h2>{editingUser() ? "Edit User" : "Add New User"}</h2>
+                <button onClick={handleCancel} class="btn-secondary" type="button">
+                  Cancel
+                </button>
+              </div>
+              <UserForm
+                initialData={editingUser() || undefined}
+                onSubmit={handleSubmit}
+                isLoading={isLoading()}
+              />
+            </div>
           </div>
-          <UserForm
-            initialData={editingUser() || undefined}
-            onSubmit={handleSubmit}
-            isLoading={isLoading()}
-          />
         </div>
       </Show>
 

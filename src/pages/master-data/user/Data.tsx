@@ -90,11 +90,6 @@ const formatDate = (value: string) => {
   });
 };
 
-const maskPassword = (password: string) => {
-  if (!password) return "-";
-  return "*".repeat(Math.min(password.length, 8));
-};
-
 const UserTable: Component<UserTableProps> = (props) => {
   const [page, setPage] = createSignal(1);
 
@@ -130,11 +125,12 @@ const UserTable: Component<UserTableProps> = (props) => {
     return result;
   };
 
-  const startEntry = () => (props.users.length === 0 ? 0 : (page() - 1) * ITEMS_PER_PAGE + 1);
+  const startEntry = () =>
+    props.users.length === 0 ? 0 : (page() - 1) * ITEMS_PER_PAGE + 1;
   const endEntry = () => Math.min(page() * ITEMS_PER_PAGE, props.users.length);
 
   return (
-    <div class="users-table-card">
+    <div class="app-table-card">
       <Show when={props.isLoading}>
         <div class="table-loading">Loading...</div>
       </Show>
@@ -144,19 +140,18 @@ const UserTable: Component<UserTableProps> = (props) => {
           when={props.users.length > 0}
           fallback={<div class="table-empty">No users found.</div>}
         >
-          <div class="users-table-scroll">
-            <table class="users-table">
+          <div class="app-table-scroll">
+            <table class="app-table">
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Password</th>
                   <th>Employee ID</th>
-                  <th>Grade ID</th>
-                  <th>Position ID</th>
-                  <th>Role ID</th>
-                  <th>Signature Image</th>
+                  <th>Role</th>
+                  <th>Grade</th>
+                  <th>Position</th>
+                  <th>Signature</th>
                   <th>Created At</th>
                   <th>Updated At</th>
                   <th style="text-align:right">Actions</th>
@@ -169,11 +164,10 @@ const UserTable: Component<UserTableProps> = (props) => {
                       <td>{user.id}</td>
                       <td>{user.name}</td>
                       <td>{user.email}</td>
-                      <td>{maskPassword(user.password)}</td>
                       <td>{user.employee_id}</td>
-                      <td>{user.grade_id}</td>
-                      <td>{user.position_id}</td>
-                      <td>{user.role_id}</td>
+                      <td>{user.role?.name || user.role_id}</td>
+                      <td>{user.grade?.grade || user.grade_id}</td>
+                      <td>{user.position?.des || user.position_id}</td>
                       <td>{user.signature_image ? "Available" : "-"}</td>
                       <td>{formatDate(user.created_at)}</td>
                       <td>{formatDate(user.updated_at)}</td>
