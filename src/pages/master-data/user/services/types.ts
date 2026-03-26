@@ -3,24 +3,9 @@
  * Type definitions for user-related data and forms
  */
 
-export interface UserRole {
-  id: number;
-  code: string;
-  name: string;
-}
-
-export interface UserGrade {
-  id: number;
-  level: number;
-  grade: string;
-  des: string;
-}
-
-export interface UserPosition {
-  id: number;
-  category: string;
-  des: string;
-}
+import { Grade } from "../../grade/services/types";
+import { Position } from "../../position/services/types";
+import { Role } from "../../role/services/types";
 
 export interface User {
   id: number;
@@ -33,9 +18,9 @@ export interface User {
   role_id: number;
   created_at: string;
   updated_at: string;
-  role?: UserRole | null;
-  grade?: UserGrade | null;
-  position?: UserPosition | null;
+  role?: Role | null;
+  grade?: Grade | null;
+  position?: Position | null;
 }
 
 export interface CreateUserInput {

@@ -4,13 +4,13 @@
  */
 
 import { api } from '../../../../services/api';
-import { Grade } from '../../grade/services/types';
-import { Position } from '../../position/services/types';
-import { Role } from '../../role/services/types';
 import type {
   User,
   CreateUserInput,
   UpdateUserInput,
+  UserGrade,
+  UserPosition,
+  UserRole,
 } from './types';
 
 export const userAPI = {
@@ -27,9 +27,9 @@ export const userAPI = {
   /**
    * Get dropdown options
    */
-  getGrades: () => api.get<Grade[]>('/grades'),
-  getPositions: () => api.get<Position[]>('/positions'),
-  getRoles: () => api.get<Role[]>('/roles'),
+  getGrades: () => api.get<UserGrade[]>('/grades'),
+  getPositions: () => api.get<UserPosition[]>('/positions'),
+  getRoles: () => api.get<UserRole[]>('/roles'),
 
   /**
    * Create a new user

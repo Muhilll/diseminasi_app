@@ -7,7 +7,6 @@ import UserTable from "./Data";
 import UserForm from "./Form";
 import { userAPI } from "./services/api";
 import type { User, UserFormData } from "./services/types";
-import "./style.css";
 
 // Plus-circle icon for the Create button
 const IconPlusCircle = () => (
