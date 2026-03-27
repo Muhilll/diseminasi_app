@@ -1,10 +1,11 @@
 import { A } from "@solidjs/router";
-import { Component } from "solid-js";
-import type { Dissemination } from "./services/types";
+import { Component, JSX, Show } from "solid-js";
+import type { Dissemination } from "../services/types";
 
 interface DisseminationDetailHeaderProps {
   dissemination?: Dissemination | null;
   formattedDate: string;
+  action?: JSX.Element;
 }
 
 const IconCalendar = () => (
@@ -41,7 +42,7 @@ const IconMapPin = () => (
   </svg>
 );
 
-const DisseminationDetailHeader: Component<DisseminationDetailHeaderProps> = (props) => {
+const Header: Component<DisseminationDetailHeaderProps> = (props) => {
   const locationSummary = () =>
     [props.dissemination?.province, props.dissemination?.city].filter(Boolean).join(", ") || "-";
 
@@ -50,6 +51,10 @@ const DisseminationDetailHeader: Component<DisseminationDetailHeaderProps> = (pr
       <A href="/disseminations" class="btn-secondary dissemination-detail-back">
         Back
       </A>
+
+      <Show when={props.action}>
+        <div class="dissemination-detail-top-action">{props.action}</div>
+      </Show>
 
       <section class="dissemination-detail-header">
         <div class="dissemination-detail-main">
@@ -88,4 +93,4 @@ const DisseminationDetailHeader: Component<DisseminationDetailHeaderProps> = (pr
   );
 };
 
-export default DisseminationDetailHeader;
+export default Header;

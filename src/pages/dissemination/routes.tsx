@@ -1,6 +1,6 @@
 import { Route } from "@solidjs/router";
 import ProtectedPage from "../../router/ProtectedRoute";
-import DisseminationDetailPage from "./Detail";
+import DisseminationDetailPage from "./detail/Index";
 import DisseminationPage from "./Index";
 
 export const disseminationRoutes = (

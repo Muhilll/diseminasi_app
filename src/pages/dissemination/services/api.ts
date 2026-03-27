@@ -2,15 +2,12 @@ import { api } from "../../../services/api";
 import type {
   CreateDisseminationInput,
   Dissemination,
-  DisseminationDetail,
   UpdateDisseminationInput,
 } from "./types";
 
 export const disseminationAPI = {
   getAll: () => api.get<Dissemination[]>("/disseminations"),
   getById: (id: string) => api.get<Dissemination>(`/disseminations/${id}`),
-  getDetailsByDisseminationId: (id: string) =>
-    api.get<DisseminationDetail[]>(`/dissemination-details/dissemination/${id}`),
   create: (data: CreateDisseminationInput) =>
     api.post<Dissemination>("/disseminations", data),
   update: (id: string, data: UpdateDisseminationInput) =>

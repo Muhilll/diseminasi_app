@@ -3,6 +3,8 @@ import type { DisseminationDetail } from "./services/types";
 
 interface DisseminationDetailListProps {
   details: DisseminationDetail[];
+  onEdit: (detail: DisseminationDetail) => void;
+  onDelete: (id: string) => void;
 }
 
 const IconUsers = () => (
@@ -89,7 +91,7 @@ const formatDate = (value?: string) => {
   });
 };
 
-const DisseminationDetailImage: Component<{ src?: string; alt: string }> = (props) => {
+const DetailImage: Component<{ src?: string; alt: string }> = (props) => {
   const [failed, setFailed] = createSignal(false);
 
   return (
@@ -104,13 +106,13 @@ const DisseminationDetailImage: Component<{ src?: string; alt: string }> = (prop
   );
 };
 
-const DisseminationDetailList: Component<DisseminationDetailListProps> = (props) => {
+const Data: Component<DisseminationDetailListProps> = (props) => {
   return (
     <div class="dissemination-detail-list">
       <For each={props.details}>
         {(detail) => (
           <article class="dissemination-detail-card">
-            <DisseminationDetailImage src={detail.image} alt={detail.material || "Dissemination"} />
+            <DetailImage src={detail.image} alt={detail.material || "Dissemination"} />
 
             <div class="dissemination-detail-card-body">
               <div class="dissemination-detail-card-grid">
@@ -152,11 +154,19 @@ const DisseminationDetailList: Component<DisseminationDetailListProps> = (props)
               </div>
 
               <div class="dissemination-detail-card-actions">
-                <button type="button" class="dissemination-detail-action-btn" disabled>
+                <button
+                  type="button"
+                  class="dissemination-detail-action-btn"
+                  onClick={() => props.onEdit(detail)}
+                >
                   <IconEdit />
                   Edit
                 </button>
-                <button type="button" class="dissemination-detail-action-btn is-danger" disabled>
+                <button
+                  type="button"
+                  class="dissemination-detail-action-btn is-danger"
+                  onClick={() => props.onDelete(String(detail.id))}
+                >
                   <IconTrash />
                   Delete
                 </button>
@@ -169,4 +179,4 @@ const DisseminationDetailList: Component<DisseminationDetailListProps> = (props)
   );
 };
 
-export default DisseminationDetailList;
+export default Data;
