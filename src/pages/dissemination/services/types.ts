@@ -23,6 +23,21 @@ export interface Dissemination {
   user?: DisseminationUser | null;
 }
 
+export interface DisseminationDetail {
+  id: number;
+  disseminations_id: number;
+  basis: string;
+  material: string;
+  date: string;
+  location: string;
+  methode: string;
+  participants: string;
+  result: string;
+  image: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CreateDisseminationInput {
   title: string;
   province: string;

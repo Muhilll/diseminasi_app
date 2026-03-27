@@ -388,6 +388,278 @@ body {
   opacity: 1;
 }
 
+.dissemination-detail-header-wrap {
+  margin-bottom: 24px;
+}
+
+.dissemination-detail-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  text-decoration: none;
+}
+
+.dissemination-detail-header {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px 36px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfcfb 100%);
+  border: 1px solid #ece8de;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+}
+
+.dissemination-detail-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dissemination-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #d8edf8;
+  color: #4f6e7f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.dissemination-detail-header h1 {
+  margin-top: 18px;
+  font-size: clamp(30px, 4vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #20242a;
+}
+
+.dissemination-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  margin-top: 18px;
+}
+
+.dissemination-detail-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #475055;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dissemination-detail-meta-item svg {
+  flex-shrink: 0;
+  color: var(--green-800);
+}
+
+.dissemination-detail-location-card {
+  width: min(100%, 292px);
+  align-self: flex-start;
+  padding: 20px 22px;
+  background: #fbfbfa;
+  border: 1px solid #ece8de;
+  border-radius: 14px;
+}
+
+.dissemination-detail-location-title {
+  margin-bottom: 14px;
+  color: #5e665f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.dissemination-detail-location-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 15px;
+  color: #2f3633;
+}
+
+.dissemination-detail-location-row + .dissemination-detail-location-row {
+  margin-top: 10px;
+}
+
+.dissemination-detail-location-row strong {
+  color: var(--green-800);
+  font-weight: 500;
+}
+
+.dissemination-detail-list {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.dissemination-detail-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e9e6de;
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+}
+
+.dissemination-detail-card-media {
+  position: relative;
+  min-height: 320px;
+  background: linear-gradient(160deg, #6aa7d7 0%, #8ec5eb 30%, #7dbb4f 100%);
+}
+
+.dissemination-detail-card-media img,
+.dissemination-detail-card-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.dissemination-detail-card-media img {
+  display: block;
+  object-fit: cover;
+}
+
+.dissemination-detail-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.dissemination-detail-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 34px 34px 26px;
+}
+
+.dissemination-detail-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 36px;
+}
+
+.dissemination-detail-card-field {
+  min-width: 0;
+}
+
+.dissemination-detail-card-field span,
+.dissemination-detail-result-box span {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #5e665f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.dissemination-detail-card-field strong {
+  display: block;
+  color: #2c3130;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.dissemination-detail-card-field .is-accent {
+  color: var(--green-800);
+}
+
+.dissemination-detail-card-field-full {
+  grid-column: 1 / -1;
+}
+
+.dissemination-detail-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5453;
+}
+
+.dissemination-detail-card-meta svg {
+  flex-shrink: 0;
+  color: #72808d;
+}
+
+.dissemination-detail-card-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dissemination-detail-card-inline span {
+  margin-bottom: 0;
+}
+
+.dissemination-detail-card-inline svg {
+  flex-shrink: 0;
+  color: #72808d;
+}
+
+.dissemination-detail-card-inline strong {
+  display: inline;
+  line-height: 1.4;
+}
+
+.dissemination-detail-result-box {
+  padding: 18px 20px;
+  background: #fbfbfa;
+  border: 1px solid #ece8de;
+  border-left: 3px solid #99e59c;
+  border-radius: 14px;
+}
+
+.dissemination-detail-result-box p {
+  color: #4b5453;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.dissemination-detail-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.dissemination-detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #5b5751;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dissemination-detail-action-btn.is-danger {
+  color: var(--red-600);
+}
+
+.dissemination-detail-action-btn:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
 @media (max-width: 768px) {
   .user-page {
     padding: 20px 14px;
@@ -439,5 +711,50 @@ body {
     left: 12px;
     min-width: 0;
     max-width: none;
+  }
+
+  .dissemination-detail-header {
+    flex-direction: column;
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .dissemination-detail-header h1 {
+    margin-top: 14px;
+    font-size: 28px;
+  }
+
+  .dissemination-detail-meta {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dissemination-detail-location-card {
+    width: 100%;
+  }
+
+  .dissemination-detail-card {
+    grid-template-columns: 1fr;
+  }
+
+  .dissemination-detail-card-media {
+    min-height: 240px;
+  }
+
+  .dissemination-detail-card-body {
+    padding: 22px 18px;
+  }
+
+  .dissemination-detail-card-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .dissemination-detail-card-field-full {
+    grid-column: auto;
+  }
+
+  .dissemination-detail-card-actions {
+    justify-content: flex-start;
   }
 }

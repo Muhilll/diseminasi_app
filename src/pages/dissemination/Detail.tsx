@@ -1,8 +1,9 @@
-import { A, useParams } from "@solidjs/router";
+import { useParams } from "@solidjs/router";
 import { Component, Show, createMemo, createSignal, onMount } from "solid-js";
-import PageHeader from "../../components/ui/PageHeader";
+import DisseminationDetailHeader from "./DetailHeader";
+import DisseminationDetailList from "./DetailList";
 import { disseminationAPI } from "./services/api";
-import type { Dissemination } from "./services/types";
+import type { Dissemination, DisseminationDetail } from "./services/types";
 
 const formatDate = (value?: string) => {
   if (!value) return "-";
@@ -19,7 +20,12 @@ const formatDate = (value?: string) => {
 
 const DisseminationDetailPage: Component = () => {
   const params = useParams<{ id: string }>();
-  const [dissemination, setDissemination] = createSignal<Dissemination | null>(null);
+  const [dissemination, setDissemination] = createSignal<Dissemination | null>(
+    null,
+  );
+  const [disseminationDetails, setDisseminationDetails] = createSignal<
+    DisseminationDetail[]
+  >([]);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -27,7 +33,9 @@ const DisseminationDetailPage: Component = () => {
     const item = dissemination();
     if (!item) return "-";
 
-    return [item.province, item.city, item.district, item.village].filter(Boolean).join(", ");
+    return [item.province, item.city, item.district, item.village]
+      .filter(Boolean)
+      .join(", ");
   });
 
   const fetchDissemination = async () => {
@@ -40,12 +48,23 @@ const DisseminationDetailPage: Component = () => {
     setError(null);
 
     try {
-      const result = await disseminationAPI.getById(params.id);
+      const [disseminationResult, detailResult] = await Promise.all([
+        disseminationAPI.getById(params.id),
+        disseminationAPI.getDetailsByDisseminationId(params.id),
+      ]);
 
-      if (result.success && result.data) {
-        setDissemination(result.data);
+      if (disseminationResult.success && disseminationResult.data) {
+        setDissemination(disseminationResult.data);
       } else {
-        setError(result.error || "Failed to fetch dissemination detail");
+        setError(
+          disseminationResult.error || "Failed to fetch dissemination detail",
+        );
+      }
+
+      if (detailResult.success && detailResult.data) {
+        setDisseminationDetails(detailResult.data);
+      } else if (!disseminationResult.success || !disseminationResult.data) {
+        setError(detailResult.error || "Failed to fetch dissemination details");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -58,14 +77,9 @@ const DisseminationDetailPage: Component = () => {
 
   return (
     <div class="user-page">
-      <PageHeader
-        title={dissemination()?.title || "Dissemination Detail"}
-        description={`Tanggal: ${formatDate(dissemination()?.date)} | Lokasi: ${location()}`}
-        action={
-          <A href="/disseminations" class="btn-secondary">
-            Back
-          </A>
-        }
+      <DisseminationDetailHeader
+        dissemination={dissemination()}
+        formattedDate={formatDate(dissemination()?.date)}
       />
 
       <Show when={error()}>
@@ -77,45 +91,23 @@ const DisseminationDetailPage: Component = () => {
       </Show>
 
       <Show when={!isLoading() && dissemination()}>
-        {(item) => (
-          <div class="form-section">
-            <div class="form-section-header">
-              <h2>Dissemination Information</h2>
-            </div>
-
-            <div class="user-form">
-              <div class="form-group">
-                <label>Title</label>
-                <div class="form-static-value">{item().title || "-"}</div>
+        <>
+          <Show
+            when={disseminationDetails().length > 0}
+            fallback={
+              <div class="form-section">
+                <div class="form-section-header">
+                  <h2>Dissemination Details</h2>
+                </div>
+                <div class="form-helper-text">
+                  No dissemination details found for this record.
+                </div>
               </div>
-
-              <div class="form-group">
-                <label>Date</label>
-                <div class="form-static-value">{formatDate(item().date)}</div>
-              </div>
-
-              <div class="form-group">
-                <label>Province</label>
-                <div class="form-static-value">{item().province || "-"}</div>
-              </div>
-
-              <div class="form-group">
-                <label>City</label>
-                <div class="form-static-value">{item().city || "-"}</div>
-              </div>
-
-              <div class="form-group">
-                <label>District</label>
-                <div class="form-static-value">{item().district || "-"}</div>
-              </div>
-
-              <div class="form-group">
-                <label>Village</label>
-                <div class="form-static-value">{item().village || "-"}</div>
-              </div>
-            </div>
-          </div>
-        )}
+            }
+          >
+            <DisseminationDetailList details={disseminationDetails()} />
+          </Show>
+        </>
       </Show>
     </div>
   );
