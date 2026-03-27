@@ -1,49 +1,16 @@
 /**
- * User API Service
- * API calls related to user management
+ * Position API Service
+ * API calls related to position management
  */
 
-import { api } from '../../../../services/api';
-import type {
-  User,
-  CreateUserInput,
-  UpdateUserInput,
-  UserGrade,
-  UserPosition,
-  UserRole,
-} from './types';
+import { api } from "../../../../services/api";
+import type { CreatePositionInput, Position, UpdatePositionInput } from "./types";
 
-export const userAPI = {
-  /**
-   * Get all users
-   */
-  getAll: () => api.get<User[]>('/users'),
-
-  /**
-   * Get user by ID
-   */
-  getById: (id: string) => api.get<User>(`/users/${id}`),
-
-  /**
-   * Get dropdown options
-   */
-  getGrades: () => api.get<UserGrade[]>('/grades'),
-  getPositions: () => api.get<UserPosition[]>('/positions'),
-  getRoles: () => api.get<UserRole[]>('/roles'),
-
-  /**
-   * Create a new user
-   */
-  create: (data: CreateUserInput) => api.post<User>('/users', data),
-
-  /**
-   * Update user by ID
-   */
-  update: (id: string, data: UpdateUserInput) =>
-    api.put<User>(`/users/${id}`, data),
-
-  /**
-   * Delete user by ID
-   */
-  delete: (id: string) => api.delete<void>(`/users/${id}`),
+export const positionAPI = {
+  getAll: () => api.get<Position[]>("/positions"),
+  getById: (id: string) => api.get<Position>(`/positions/${id}`),
+  create: (data: CreatePositionInput) => api.post<Position>("/positions", data),
+  update: (id: string, data: UpdatePositionInput) =>
+    api.put<Position>(`/positions/${id}`, data),
+  delete: (id: string) => api.delete<void>(`/positions/${id}`),
 };
