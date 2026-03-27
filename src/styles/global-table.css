@@ -119,6 +119,10 @@
   color: var(--gray-700);
 }
 
+.btn-icon.btn-detail:hover {
+  color: var(--gray-700);
+}
+
 .btn-icon.btn-delete {
   color: var(--red-600);
   opacity: 0.7;

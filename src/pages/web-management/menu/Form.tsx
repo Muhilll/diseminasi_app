@@ -79,7 +79,6 @@ const MenuForm: Component<MenuFormProps> = (props) => {
           value={formData().path}
           onChange={(e) => handleChange("path", e.target.value)}
           placeholder="/dashboard"
-          required
           disabled={props.isLoading}
         />
       </div>

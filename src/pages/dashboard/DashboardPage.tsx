@@ -3,9 +3,11 @@
  * Main dashboard for the application
  */
 
-import { Component } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
-import { useAuth } from '../../services/authStore';
+import { Component } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import { useAuth } from "../../services/authStore";
+import PageHeader from "../../components/ui/PageHeader";
+import Toast from "../../components/ui/Toast";
 
 const DashboardPage: Component = () => {
   const navigate = useNavigate();
@@ -13,22 +15,16 @@ const DashboardPage: Component = () => {
 
   const handleLogout = () => {
     auth.logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <div class="dashboard-page">
-      <div class="dashboard-header">
-        <h1>Dashboard</h1>
-        <button onClick={handleLogout} class="logout-btn">
-          Logout
-        </button>
-      </div>
+    <div class="user-page">
+      <PageHeader title="Dashboard" description="Welcome to your dashboard!" />
 
       <div class="user-info">
         <h2>Welcome, {auth.user()?.name}!</h2>
         <p>Email: {auth.user()?.email}</p>
-        <p>Role ID: {auth.user()?.role_id}</p>
       </div>
 
       <style>{`

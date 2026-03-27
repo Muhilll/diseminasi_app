@@ -69,8 +69,6 @@ const UserTable: Component<UserTableProps> = (props) => {
     { header: "Grade", cell: (user) => <>{user.grade?.grade || user.grade_id}</> },
     { header: "Position", cell: (user) => <>{user.position?.des || user.position_id}</> },
     { header: "Signature", cell: (user) => <>{user.signature_image ? "Available" : "-"}</> },
-    { header: "Created At", cell: (user) => <>{formatDate(user.created_at)}</> },
-    { header: "Updated At", cell: (user) => <>{formatDate(user.updated_at)}</> },
     {
       header: "Actions",
       headerStyle: { "text-align": "right" },
