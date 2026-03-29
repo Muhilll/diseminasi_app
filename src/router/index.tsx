@@ -4,15 +4,15 @@
  */
 
 import { Route } from '@solidjs/router';
-import { authRoutes } from '../pages/auth/routes';
-import { dashboardRoutes } from '../pages/dashboard/routes';
-import { disseminationRoutes } from '../pages/dissemination/routes';
-import { gradeRoutes } from '../pages/master-data/grade/routes';
-import { positionRoutes } from '../pages/master-data/position/routes';
-import { roleRoutes } from '../pages/master-data/role/routes';
-import { userRoutes } from '../pages/master-data/user/routes';
-import { menuRoutes } from '../pages/web-management/menu/routes';
-import { rolePermissionRoutes } from '../pages/web-management/role-permission/routes';
+import { authRoutes } from '../app/auth/routes';
+import { dashboardRoutes } from '../app/dashboard/routes';
+import { disseminationRoutes, disseminationStandaloneRoutes } from '../app/dissemination/routes';
+import { gradeRoutes } from '../app/master-data/grade/routes';
+import { positionRoutes } from '../app/master-data/position/routes';
+import { roleRoutes } from '../app/master-data/role/routes';
+import { userRoutes } from '../app/master-data/user/routes';
+import { menuRoutes } from '../app/web-management/menu/routes';
+import { rolePermissionRoutes } from '../app/web-management/role-permission/routes';
 import Layout from '../components/layout/Index';
 import { ParentComponent } from 'solid-js';
 /**
@@ -34,6 +34,7 @@ export const routeConfig = (
     {/* Public Routes */}
     <Route path="/" component={() => <div>Home Page</div>} />
     {authRoutes}
+    {disseminationStandaloneRoutes}
 
     {/* Protected Routes with Layout */}
     <Route component={LayoutedRoutes}>

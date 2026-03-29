@@ -1,6 +1,7 @@
 import { Route } from "@solidjs/router";
 import ProtectedPage from "../../router/ProtectedRoute";
 import DisseminationDetailPage from "./detail/Index";
+import DisseminationExportPage from "./detail/export/Index";
 import DisseminationPage from "./Index";
 
 export const disseminationRoutes = (
@@ -18,6 +19,19 @@ export const disseminationRoutes = (
       component={() => (
         <ProtectedPage>
           <DisseminationDetailPage />
+        </ProtectedPage>
+      )}
+    />
+  </>
+);
+
+export const disseminationStandaloneRoutes = (
+  <>
+    <Route
+      path="/disseminations/details/:id/export"
+      component={() => (
+        <ProtectedPage>
+          <DisseminationExportPage />
         </ProtectedPage>
       )}
     />

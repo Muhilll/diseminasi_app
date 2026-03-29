@@ -32,6 +32,23 @@ const IconPlusCircle = () => (
   </svg>
 );
 
+const IconPrinter = () => (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="6 9 6 2 18 2 18 9" />
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+    <rect x="6" y="14" width="12" height="8" />
+  </svg>
+);
+
 const formatDate = (value?: string) => {
   if (!value) return "-";
 
@@ -206,16 +223,33 @@ const DisseminationDetailPage: Component = () => {
         dissemination={dissemination()}
         formattedDate={formatDate(dissemination()?.date)}
         action={
-          <button
-            class="btn-create"
-            onClick={() => {
-              setEditingItem(null);
-              setShowForm(true);
-            }}
-          >
-            <IconPlusCircle />
-            Add Detail
-          </button>
+          <div class="dissemination-detail-header-actions">
+            <button
+              type="button"
+              class="btn-secondary dissemination-detail-print-btn"
+              onClick={() =>
+                window.open(
+                  `/disseminations/details/${params.id}/export`,
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
+            >
+              <IconPrinter />
+              Cetak
+            </button>
+
+            <button
+              class="btn-create"
+              onClick={() => {
+                setEditingItem(null);
+                setShowForm(true);
+              }}
+            >
+              <IconPlusCircle />
+              Add Detail
+            </button>
+          </div>
         }
       />
 

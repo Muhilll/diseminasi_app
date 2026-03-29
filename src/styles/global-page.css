@@ -416,6 +416,19 @@ body {
   margin-bottom: 14px;
 }
 
+.dissemination-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dissemination-detail-print-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .dissemination-detail-header {
   display: flex;
   align-items: stretch;
@@ -739,9 +752,18 @@ body {
     justify-content: stretch;
   }
 
+  .dissemination-detail-header-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
   .dissemination-detail-top-action .btn-create {
     width: 100%;
     justify-content: center;
+  }
+
+  .dissemination-detail-print-btn {
+    width: 100%;
   }
 
   .dissemination-detail-header h1 {

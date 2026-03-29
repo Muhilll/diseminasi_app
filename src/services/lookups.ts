@@ -1,8 +1,8 @@
 import { api } from "./api";
-import type { Grade } from "../pages/master-data/grade/services/types";
-import type { Position } from "../pages/master-data/position/services/types";
-import type { Role } from "../pages/master-data/role/services/types";
-import type { Menu } from "../pages/web-management/menu/services/types";
+import type { Grade } from "../app/master-data/grade/services/types";
+import type { Position } from "../app/master-data/position/services/types";
+import type { Role } from "../app/master-data/role/services/types";
+import type { Menu } from "../app/web-management/menu/services/types";
 
 export const lookupAPI = {
   getGrades: () => api.get<Grade[]>("/grades"),
