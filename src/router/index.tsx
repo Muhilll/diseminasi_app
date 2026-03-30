@@ -6,13 +6,13 @@
 import { Route } from '@solidjs/router';
 import { authRoutes } from '../app/auth/routes';
 import { dashboardRoutes } from '../app/dashboard/routes';
-import { disseminationRoutes, disseminationStandaloneRoutes } from '../app/dissemination/routes';
-import { gradeRoutes } from '../app/master-data/grade/routes';
-import { positionRoutes } from '../app/master-data/position/routes';
-import { roleRoutes } from '../app/master-data/role/routes';
-import { userRoutes } from '../app/master-data/user/routes';
-import { menuRoutes } from '../app/web-management/menu/routes';
-import { rolePermissionRoutes } from '../app/web-management/role-permission/routes';
+import { disseminationRoutes, disseminationStandaloneRoutes } from '../app/dissemination/route';
+import { gradeRoutes } from '../app/master-data/grade/route';
+import { positionRoutes } from '../app/master-data/position/route';
+import { roleRoutes } from '../app/master-data/role/route';
+import { userRoutes } from '../app/master-data/user/route';
+import { menuRoutes } from '../app/web-management/menu/route';
+import { rolePermissionRoutes } from '../app/web-management/role-permission/route';
 import Layout from '../components/layout/Index';
 import { ParentComponent } from 'solid-js';
 /**
