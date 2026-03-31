@@ -11,19 +11,19 @@ export interface Absensi {
 }
 
 export interface CreateAbsensiInput {
-  gambar: string;
+  gambar?: File;
   des: string;
   user_id: string | number;
 }
 
 export interface UpdateAbsensiInput {
-  gambar?: string;
+  gambar?: File;
   des?: string;
   user_id?: string | number;
 }
 
 export interface AbsensiFormData {
-  gambar: string;
+  gambar: File | string | null;
   des: string;
   user_id: string | number;
 }

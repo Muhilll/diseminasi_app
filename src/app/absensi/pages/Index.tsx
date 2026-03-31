@@ -3,6 +3,7 @@ import ConfirmModal from "../../../components/ui/ConfirmModal";
 import Modal from "../../../components/ui/Modal";
 import PageHeader from "../../../components/ui/PageHeader";
 import Toast from "../../../components/ui/Toast";
+import { usePagePermissions } from "../../../hooks/usePagePermissions";
 import { useAbsensiManagement } from "../hook/useAbsensiManagement";
 import AbsensiForm from "./Form";
 import AbsensiTable from "./Table";
@@ -26,6 +27,7 @@ const IconPlusCircle = () => (
 
 const AbsensiPage: Component = () => {
   const absensiManagement = useAbsensiManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -34,12 +36,12 @@ const AbsensiPage: Component = () => {
       <PageHeader
         title="Absensi Management"
         description="Manage attendance records and supporting photos."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={absensiManagement.openCreateForm}>
             <IconPlusCircle />
             Add New Absensi
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={absensiManagement.error()}>
@@ -79,6 +81,8 @@ const AbsensiPage: Component = () => {
       <AbsensiTable
         absensis={absensiManagement.absensis()}
         isLoading={absensiManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={absensiManagement.handleEdit}
         onDelete={absensiManagement.requestDelete}
       />

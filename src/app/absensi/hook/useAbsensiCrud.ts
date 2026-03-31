@@ -2,6 +2,19 @@ import { useToast } from "../../../hooks/useToast";
 import { absensiAPI } from "../service/absensi.api";
 import type { Absensi, AbsensiFormData } from "../type/absensi";
 
+const createAbsensiFormData = (data: AbsensiFormData) => {
+  const formData = new FormData();
+
+  formData.append("user_id", String(data.user_id));
+  formData.append("des", data.des);
+
+  if (data.gambar instanceof File) {
+    formData.append("gambar", data.gambar);
+  }
+
+  return formData;
+};
+
 interface UseAbsensiCrudParams {
   editingAbsensi: () => Absensi | null;
   deletingAbsensiId: () => string | null;
@@ -39,9 +52,11 @@ export const useAbsensiCrud = (params: UseAbsensiCrudParams) => {
     params.setError(null);
 
     try {
+      const payload = createAbsensiFormData(data);
+
       const result = params.editingAbsensi()
-        ? await absensiAPI.update(String(params.editingAbsensi()!.id), data)
-        : await absensiAPI.create(data);
+        ? await absensiAPI.update(String(params.editingAbsensi()!.id), payload)
+        : await absensiAPI.create(payload);
 
       if (result.success) {
         params.setEditingAbsensi(null);

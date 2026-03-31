@@ -2,6 +2,7 @@ import { Show, createSignal, type Component } from "solid-js";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { useDisseminationDetailManagement } from "../hook/useDisseminationDetailManagement";
 import { exportReportDocx } from "./export/export-docx";
 import { exportReportPdf } from "./export/export-pdf";
@@ -47,6 +48,7 @@ const IconPrinter = () => (
 
 const DisseminationDetailPage: Component = () => {
   const detailManagement = useDisseminationDetailManagement();
+  const permissions = usePagePermissions();
   const [exportFormat, setExportFormat] = createSignal<"pdf" | "docx">("pdf");
   const [isExporting, setIsExporting] = createSignal(false);
   let reportContentRef: HTMLDivElement | undefined;
@@ -104,10 +106,12 @@ const DisseminationDetailPage: Component = () => {
               {isExporting() ? "Exporting..." : "Export"}
             </button>
 
-            <button class="btn-create" onClick={detailManagement.openCreateForm}>
-              <IconPlusCircle />
-              Add Detail
-            </button>
+            {permissions.canCreate() && (
+              <button class="btn-create" onClick={detailManagement.openCreateForm}>
+                <IconPlusCircle />
+                Add Detail
+              </button>
+            )}
           </div>
         }
       />
@@ -171,6 +175,8 @@ const DisseminationDetailPage: Component = () => {
         >
           <Data
             details={detailManagement.details()}
+            canUpdate={permissions.canUpdate()}
+            canDelete={permissions.canDelete()}
             onEdit={detailManagement.handleEdit}
             onDelete={detailManagement.requestDelete}
           />

@@ -1,4 +1,5 @@
 import type { DataTableColumn } from "../../../components/ui/DataTable";
+import { formatDate } from "../../../utils/helpers";
 import type { AbsensiTableProps } from "../type/absensi-props";
 import type { Absensi } from "../type/absensi";
 
@@ -38,9 +39,9 @@ const IconTrash = () => (
 );
 
 export const createAbsensiColumns = (
-  props: Pick<AbsensiTableProps, "onEdit" | "onDelete">,
+  props: Pick<AbsensiTableProps, "onEdit" | "onDelete" | "canUpdate" | "canDelete">,
 ): DataTableColumn<Absensi>[] => [
-  { header: "ID", cell: (absensi) => <>{absensi.id}</> },
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
   {
     header: "Gambar",
     cell: (absensi) => (
@@ -59,8 +60,8 @@ export const createAbsensiColumns = (
     cell: (absensi) => <>{absensi.user?.name || absensi.user_id}</>,
   },
   {
-    header: "Employee ID",
-    cell: (absensi) => <>{absensi.user?.employee_id || "-"}</>,
+    header: "Created At",
+    cell: (absensi) => <>{formatDate(absensi.created_at, "id-ID")}</>,
   },
   {
     header: "Actions",
@@ -68,16 +69,20 @@ export const createAbsensiColumns = (
     cellClass: "td-actions",
     cell: (absensi) => (
       <div class="action-btns">
-        <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(absensi)}>
-          <IconEdit />
-        </button>
-        <button
-          class="btn-icon btn-delete"
-          title="Delete"
-          onClick={() => props.onDelete(String(absensi.id))}
-        >
-          <IconTrash />
-        </button>
+        {props.canUpdate && (
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(absensi)}>
+            <IconEdit />
+          </button>
+        )}
+        {props.canDelete && (
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            onClick={() => props.onDelete(String(absensi.id))}
+          >
+            <IconTrash />
+          </button>
+        )}
       </div>
     ),
   },

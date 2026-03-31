@@ -1,66 +1,103 @@
-import { createSignal, onMount } from "solid-js";
+import { createMemo, createSignal, onMount } from "solid-js";
+import { lookupAPI } from "../../../../services/lookups";
+import type { Role } from "../../../master-data/role/type/role";
+import type { Menu } from "../../menu/type/menu";
 import { useRolePermissionCrud } from "./useRolePermissionCrud";
-import type { RolePermission } from "../type/role-permission";
+import type { RolePermission, RolePermissionMatrixItem } from "../type/role-permission";
 
 export const useRolePermissionManagement = () => {
+  const [roles, setRoles] = createSignal<Role[]>([]);
+  const [menus, setMenus] = createSignal<Menu[]>([]);
   const [rolePermissions, setRolePermissions] = createSignal<RolePermission[]>([]);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
-  const [editingRolePermission, setEditingRolePermission] =
-    createSignal<RolePermission | null>(null);
+  const [selectedRole, setSelectedRole] = createSignal<Role | null>(null);
   const [showForm, setShowForm] = createSignal(false);
-  const [deletingRolePermissionId, setDeletingRolePermissionId] =
-    createSignal<string | null>(null);
-  const { toast, clearToast, fetchRolePermissions, submitRolePermission, deleteRolePermission } =
+  const { toast, clearToast, fetchRolePermissions, submitRolePermissions } =
     useRolePermissionCrud({
-      editingRolePermission,
-      deletingRolePermissionId,
       setRolePermissions,
       setIsLoading,
       setError,
-      setEditingRolePermission,
       setShowForm,
-      setDeletingRolePermissionId,
     });
 
-  const handleEdit = (rolePermission: RolePermission) => {
-    setEditingRolePermission(rolePermission);
-    setShowForm(true);
+  const loadOptions = async () => {
+    setIsLoading(true);
     setError(null);
+
+    try {
+      const [rolesResult, menusResult] = await Promise.all([
+        lookupAPI.getRoles(),
+        lookupAPI.getMenus(),
+      ]);
+
+      if (rolesResult.success && rolesResult.data) {
+        setRoles(rolesResult.data);
+      }
+
+      if (menusResult.success && menusResult.data) {
+        setMenus(menusResult.data);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const openCreateForm = () => {
+  const permissionItems = createMemo<RolePermissionMatrixItem[]>(() => {
+    const role = selectedRole();
+    if (!role) return [];
+
+    return menus().map((menu) => {
+      const existing = rolePermissions().find(
+        (item) => item.role_id === role.id && item.menu_id === menu.id,
+      );
+
+      return {
+        id: existing?.id,
+        role_id: role.id,
+        menu_id: menu.id,
+        menu_name: menu.name,
+        can_read: existing?.can_read || false,
+        can_create: existing?.can_create || false,
+        can_update: existing?.can_update || false,
+        can_delete: existing?.can_delete || false,
+        can_report: existing?.can_report || false,
+      };
+    });
+  });
+
+  const openPermissionForm = (role: Role) => {
+    setSelectedRole(role);
     setShowForm(true);
-    setEditingRolePermission(null);
     setError(null);
   };
 
   const closeForm = () => {
-    setEditingRolePermission(null);
+    setSelectedRole(null);
     setShowForm(false);
   };
 
-  const requestDelete = (id: string) => {
-    setDeletingRolePermissionId(id);
+  const initializePage = async () => {
+    await Promise.all([loadOptions(), fetchRolePermissions()]);
   };
 
-  onMount(fetchRolePermissions);
+  onMount(initializePage);
 
   return {
+    roles,
+    menus,
     rolePermissions,
+    permissionItems,
     isLoading,
     error,
-    editingRolePermission,
+    selectedRole,
     showForm,
-    deletingRolePermissionId,
     toast,
     clearToast,
-    handleSubmit: submitRolePermission,
-    handleEdit,
-    openCreateForm,
+    handleSubmit: submitRolePermissions,
+    openPermissionForm,
     closeForm,
-    requestDelete,
-    handleDeleteConfirm: deleteRolePermission,
-    setDeletingRolePermissionId,
   };
 };

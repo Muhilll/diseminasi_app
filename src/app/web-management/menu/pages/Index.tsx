@@ -3,6 +3,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import PageHeader from "../../../../components/ui/PageHeader";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { useMenuManagement } from "../hook/useMenuManagement";
 import MenuForm from "./Form";
 import MenuTable from "./Table";
@@ -17,6 +18,7 @@ const IconPlusCircle = () => (
 
 const MenuPage: Component = () => {
   const menuManagement = useMenuManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -25,12 +27,12 @@ const MenuPage: Component = () => {
       <PageHeader
         title="Menu Management"
         description="Manage web navigation menus and parent-child structure."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={menuManagement.openCreateForm}>
             <IconPlusCircle />
             Add New Menu
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={menuManagement.error()}>
@@ -66,6 +68,8 @@ const MenuPage: Component = () => {
       <MenuTable
         menus={menuManagement.menus()}
         isLoading={menuManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={menuManagement.handleEdit}
         onDelete={menuManagement.requestDelete}
       />

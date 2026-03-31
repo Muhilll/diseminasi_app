@@ -68,12 +68,15 @@ const formatDate = (value?: string) => {
 };
 
 export const createDisseminationColumns = (
-  props: Pick<DisseminationTableProps, "onEdit" | "onDelete">,
+  props: Pick<
+    DisseminationTableProps,
+    "onEdit" | "onDelete" | "canUpdate" | "canDelete"
+  >,
 ): DataTableColumn<Dissemination>[] => {
   const navigate = useNavigate();
 
   return [
-    { header: "ID", cell: (item) => <>{item.id}</> },
+    { header: "No", cell: (_, index) => <>{index + 1}</> },
     { header: "Title", cell: (item) => <>{item.title}</> },
     { header: "Province", cell: (item) => <>{item.province}</> },
     { header: "City", cell: (item) => <>{item.city}</> },
@@ -87,9 +90,11 @@ export const createDisseminationColumns = (
       cellClass: "td-actions",
       cell: (item) => (
         <div class="action-btns">
-          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(item)}>
-            <IconEdit />
-          </button>
+          {props.canUpdate && (
+            <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(item)}>
+              <IconEdit />
+            </button>
+          )}
           <button
             class="btn-icon btn-detail"
             title="Detail"
@@ -97,13 +102,15 @@ export const createDisseminationColumns = (
           >
             <IconEye />
           </button>
-          <button
-            class="btn-icon btn-delete"
-            title="Delete"
-            onClick={() => props.onDelete(String(item.id))}
-          >
-            <IconTrash />
-          </button>
+          {props.canDelete && (
+            <button
+              class="btn-icon btn-delete"
+              title="Delete"
+              onClick={() => props.onDelete(String(item.id))}
+            >
+              <IconTrash />
+            </button>
+          )}
         </div>
       ),
     },

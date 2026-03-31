@@ -38,9 +38,9 @@ const IconTrash = () => (
 );
 
 export const createUserColumns = (
-  props: Pick<UserTableProps, "onEdit" | "onDelete">,
+  props: Pick<UserTableProps, "onEdit" | "onDelete" | "canUpdate" | "canDelete">,
 ): DataTableColumn<User>[] => [
-  { header: "ID", cell: (user) => <>{user.id}</> },
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
   { header: "Name", cell: (user) => <>{user.name}</> },
   { header: "Email", cell: (user) => <>{user.email}</> },
   { header: "Employee ID", cell: (user) => <>{user.employee_id}</> },
@@ -54,16 +54,20 @@ export const createUserColumns = (
     cellClass: "td-actions",
     cell: (user) => (
       <div class="action-btns">
-        <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(user)}>
-          <IconEdit />
-        </button>
-        <button
-          class="btn-icon btn-delete"
-          title="Delete"
-          onClick={() => props.onDelete(String(user.id))}
-        >
-          <IconTrash />
-        </button>
+        {props.canUpdate && (
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(user)}>
+            <IconEdit />
+          </button>
+        )}
+        {props.canDelete && (
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            onClick={() => props.onDelete(String(user.id))}
+          >
+            <IconTrash />
+          </button>
+        )}
       </div>
     ),
   },

@@ -3,6 +3,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import PageHeader from "../../../../components/ui/PageHeader";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { useRoleManagement } from "../hook/useRoleManagement";
 import RoleForm from "./Form";
 import RoleTable from "./Table";
@@ -26,6 +27,7 @@ const IconPlusCircle = () => (
 
 const RolePage: Component = () => {
   const roleManagement = useRoleManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -34,12 +36,12 @@ const RolePage: Component = () => {
       <PageHeader
         title="Role Management"
         description="Manage role codes and names used across the system."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={roleManagement.openCreateForm}>
             <IconPlusCircle />
             Add New Role
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={roleManagement.error()}>
@@ -79,6 +81,8 @@ const RolePage: Component = () => {
       <RoleTable
         roles={roleManagement.roles()}
         isLoading={roleManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={roleManagement.handleEdit}
         onDelete={roleManagement.requestDelete}
       />

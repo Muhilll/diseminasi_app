@@ -3,6 +3,8 @@ import type { Dissemination, DisseminationFormData } from "./dissemination";
 export interface DisseminationTableProps {
   disseminations: Dissemination[];
   isLoading: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
   onEdit: (dissemination: Dissemination) => void;
   onDelete: (id: string) => void;
 }

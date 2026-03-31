@@ -33,7 +33,10 @@ const formatDate = (value?: string) => {
 };
 
 export const createMenuColumns = (
-  props: Pick<MenuTableProps, "menus" | "onEdit" | "onDelete">,
+  props: Pick<
+    MenuTableProps,
+    "menus" | "onEdit" | "onDelete" | "canUpdate" | "canDelete"
+  >,
 ): DataTableColumn<Menu>[] => {
   const getParentLabel = (menu: Menu) => {
     if (menu.parent_id === null) return "Root";
@@ -42,7 +45,7 @@ export const createMenuColumns = (
   };
 
   return [
-    { header: "ID", cell: (menu) => <>{menu.id}</> },
+    { header: "No", cell: (_, index) => <>{index + 1}</> },
     { header: "Name", cell: (menu) => <>{menu.name}</> },
     { header: "Path", cell: (menu) => <>{menu.path || "-"}</> },
     { header: "Icon", cell: (menu) => <>{menu.icon || "-"}</> },
@@ -55,12 +58,16 @@ export const createMenuColumns = (
       cellClass: "td-actions",
       cell: (menu) => (
         <div class="action-btns">
-          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(menu)}>
-            <IconEdit />
-          </button>
-          <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(menu.id))}>
-            <IconTrash />
-          </button>
+          {props.canUpdate && (
+            <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(menu)}>
+              <IconEdit />
+            </button>
+          )}
+          {props.canDelete && (
+            <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(menu.id))}>
+              <IconTrash />
+            </button>
+          )}
         </div>
       ),
     },

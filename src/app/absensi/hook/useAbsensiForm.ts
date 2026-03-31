@@ -20,7 +20,10 @@ export const useAbsensiForm = (params: UseAbsensiFormParams) => {
     setFormData(createInitialFormData(params.initialData()));
   });
 
-  const handleChange = (field: keyof AbsensiFormData, value: string | number) => {
+  const handleChange = (
+    field: keyof AbsensiFormData,
+    value: string | number | File | null,
+  ) => {
     setFormData((current) => ({
       ...current,
       [field]: value,

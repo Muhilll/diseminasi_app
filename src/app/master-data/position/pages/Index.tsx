@@ -3,6 +3,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import PageHeader from "../../../../components/ui/PageHeader";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { usePositionManagement } from "../hook/usePositionManagement";
 import PositionForm from "./Form";
 import PositionTable from "./Table";
@@ -17,6 +18,7 @@ const IconPlusCircle = () => (
 
 const PositionPage: Component = () => {
   const positionManagement = usePositionManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -25,12 +27,12 @@ const PositionPage: Component = () => {
       <PageHeader
         title="Position Management"
         description="Manage positions used across the system."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={positionManagement.openCreateForm}>
             <IconPlusCircle />
             Add New Position
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={positionManagement.error()}>
@@ -66,6 +68,8 @@ const PositionPage: Component = () => {
       <PositionTable
         positions={positionManagement.positions()}
         isLoading={positionManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={positionManagement.handleEdit}
         onDelete={positionManagement.requestDelete}
       />

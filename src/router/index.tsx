@@ -3,7 +3,7 @@
  * Central routing configuration for the application
  */
 
-import { Route } from '@solidjs/router';
+import { Navigate, Route } from '@solidjs/router';
 import { authRoutes } from '../app/auth/routes';
 import { absensiRoutes } from '../app/absensi/route';
 import { dashboardRoutes } from '../app/dashboard/routes';
@@ -33,7 +33,7 @@ const LayoutedRoutes: ParentComponent = (props) => {
 export const routeConfig = (
   <>
     {/* Public Routes */}
-    <Route path="/" component={() => <div>Home Page</div>} />
+    <Route path="/" component={() => <Navigate href="/login" />} />
     {authRoutes}
     {disseminationStandaloneRoutes}
 

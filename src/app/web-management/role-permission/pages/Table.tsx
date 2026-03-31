@@ -8,10 +8,10 @@ const RolePermissionTable: Component<RolePermissionTableProps> = (props) => {
 
   return (
     <DataTable
-      rows={props.rolePermissions}
+      rows={props.roles}
       columns={columns}
       isLoading={props.isLoading}
-      emptyMessage="No role permissions found."
+      emptyMessage="No roles found."
       itemsPerPage={10}
     />
   );

@@ -3,6 +3,7 @@ import ConfirmModal from "../../../components/ui/ConfirmModal";
 import Modal from "../../../components/ui/Modal";
 import PageHeader from "../../../components/ui/PageHeader";
 import Toast from "../../../components/ui/Toast";
+import { usePagePermissions } from "../../../hooks/usePagePermissions";
 import { useDisseminationManagement } from "../hook/useDisseminationManagement";
 import DisseminationForm from "./Form";
 import DisseminationTable from "./Table";
@@ -26,6 +27,7 @@ const IconPlusCircle = () => (
 
 const DisseminationPage: Component = () => {
   const disseminationManagement = useDisseminationManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -37,12 +39,12 @@ const DisseminationPage: Component = () => {
       <PageHeader
         title="Dissemination Management"
         description="Manage dissemination records and their distribution details."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={disseminationManagement.openCreateForm}>
             <IconPlusCircle />
             Add Dissemination
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={disseminationManagement.error()}>
@@ -91,6 +93,8 @@ const DisseminationPage: Component = () => {
       <DisseminationTable
         disseminations={disseminationManagement.disseminations()}
         isLoading={disseminationManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={disseminationManagement.handleEdit}
         onDelete={disseminationManagement.requestDelete}
       />

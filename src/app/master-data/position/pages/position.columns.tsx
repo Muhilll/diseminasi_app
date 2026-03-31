@@ -33,9 +33,9 @@ const formatDate = (value?: string) => {
 };
 
 export const createPositionColumns = (
-  props: Pick<PositionTableProps, "onEdit" | "onDelete">,
+  props: Pick<PositionTableProps, "onEdit" | "onDelete" | "canUpdate" | "canDelete">,
 ): DataTableColumn<Position>[] => [
-  { header: "ID", cell: (position) => <>{position.id}</> },
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
   { header: "Category", cell: (position) => <>{position.category}</> },
   { header: "Description", cell: (position) => <>{position.des}</> },
   { header: "Created At", cell: (position) => <>{formatDate(position.created_at)}</> },
@@ -46,12 +46,16 @@ export const createPositionColumns = (
     cellClass: "td-actions",
     cell: (position) => (
       <div class="action-btns">
-        <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(position)}>
-          <IconEdit />
-        </button>
-        <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(position.id))}>
-          <IconTrash />
-        </button>
+        {props.canUpdate && (
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(position)}>
+            <IconEdit />
+          </button>
+        )}
+        {props.canDelete && (
+          <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(position.id))}>
+            <IconTrash />
+          </button>
+        )}
       </div>
     ),
   },

@@ -12,6 +12,28 @@ const toIsoDateString = (value: string) => {
   return Number.isNaN(date.getTime()) ? value : date.toISOString();
 };
 
+const createDisseminationDetailFormData = (
+  disseminationId: string,
+  data: DisseminationDetailFormData,
+) => {
+  const formData = new FormData();
+
+  formData.append("disseminations_id", disseminationId);
+  formData.append("basis", data.basis);
+  formData.append("material", data.material);
+  formData.append("date", toIsoDateString(data.date));
+  formData.append("location", data.location);
+  formData.append("methode", data.methode);
+  formData.append("participants", data.participants);
+  formData.append("result", data.result);
+
+  if (data.image instanceof File) {
+    formData.append("image", data.image);
+  }
+
+  return formData;
+};
+
 interface UseDisseminationDetailCrudParams {
   disseminationId: () => string | undefined;
   editingDetail: () => DisseminationDetail | null;
@@ -83,17 +105,7 @@ export const useDisseminationDetailCrud = (
     params.setError(null);
 
     try {
-      const payload = {
-        disseminations_id: Number(disseminationId),
-        basis: data.basis,
-        material: data.material,
-        date: toIsoDateString(data.date),
-        location: data.location,
-        methode: data.methode,
-        participants: data.participants,
-        result: data.result,
-        image: data.image,
-      };
+      const payload = createDisseminationDetailFormData(disseminationId, data);
 
       const result = params.editingDetail()
         ? await disseminationDetailAPI.update(String(params.editingDetail()!.id), payload)

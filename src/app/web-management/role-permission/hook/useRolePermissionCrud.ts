@@ -1,19 +1,15 @@
 import { useToast } from "../../../../hooks/useToast";
 import { rolePermissionAPI } from "../service/role-permission.api";
 import type {
+  RolePermissionMatrixItem,
   RolePermission,
-  RolePermissionFormData,
 } from "../type/role-permission";
 
 interface UseRolePermissionCrudParams {
-  editingRolePermission: () => RolePermission | null;
-  deletingRolePermissionId: () => string | null;
   setRolePermissions: (value: RolePermission[]) => void;
   setIsLoading: (value: boolean) => void;
   setError: (value: string | null) => void;
-  setEditingRolePermission: (value: RolePermission | null) => void;
   setShowForm: (value: boolean) => void;
-  setDeletingRolePermissionId: (value: string | null) => void;
 }
 
 export const useRolePermissionCrud = (params: UseRolePermissionCrudParams) => {
@@ -37,64 +33,45 @@ export const useRolePermissionCrud = (params: UseRolePermissionCrudParams) => {
     }
   };
 
-  const submitRolePermission = async (data: RolePermissionFormData) => {
+  const submitRolePermissions = async (items: RolePermissionMatrixItem[]) => {
     params.setIsLoading(true);
     params.setError(null);
 
     try {
-      const payload = {
-        ...data,
-        role_id: Number(data.role_id),
-        menu_id: Number(data.menu_id),
-      };
+      for (const item of items) {
+        const payload = {
+          role_id: item.role_id,
+          menu_id: item.menu_id,
+          can_read: item.can_read,
+          can_create: item.can_create,
+          can_update: item.can_update,
+          can_delete: item.can_delete,
+          can_report: item.can_report,
+        };
 
-      const result = params.editingRolePermission()
-        ? await rolePermissionAPI.update(
-            String(params.editingRolePermission()!.id),
-            payload,
-          )
-        : await rolePermissionAPI.create(payload);
+        const hasAnyPermission =
+          item.can_read ||
+          item.can_create ||
+          item.can_update ||
+          item.can_delete ||
+          item.can_report;
 
-      if (result.success) {
-        params.setEditingRolePermission(null);
-        params.setShowForm(false);
-        await fetchRolePermissions();
-        showToast("success", result.message || "Role permission saved successfully");
-      } else {
-        const message = result.error || "Operation failed";
-        params.setError(message);
-        showToast("error", message);
+        if (item.id) {
+          const result = await rolePermissionAPI.update(String(item.id), payload);
+          if (!result.success) {
+            throw new Error(result.error || "Failed to update role permission");
+          }
+        } else if (hasAnyPermission) {
+          const result = await rolePermissionAPI.create(payload);
+          if (!result.success) {
+            throw new Error(result.error || "Failed to create role permission");
+          }
+        }
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      params.setError(message);
-      showToast("error", message);
-    } finally {
-      params.setIsLoading(false);
-    }
-  };
 
-  const deleteRolePermission = async () => {
-    const id = params.deletingRolePermissionId();
-    if (!id) return;
-
-    params.setIsLoading(true);
-    params.setError(null);
-
-    try {
-      const result = await rolePermissionAPI.delete(id);
-      if (result.success) {
-        params.setDeletingRolePermissionId(null);
-        await fetchRolePermissions();
-        showToast(
-          "success",
-          result.message || "Role permission deleted successfully",
-        );
-      } else {
-        const message = result.error || "Failed to delete role permission";
-        params.setError(message);
-        showToast("error", message);
-      }
+      params.setShowForm(false);
+      await fetchRolePermissions();
+      showToast("success", "Role permissions saved successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       params.setError(message);
@@ -108,7 +85,6 @@ export const useRolePermissionCrud = (params: UseRolePermissionCrudParams) => {
     toast,
     clearToast,
     fetchRolePermissions,
-    submitRolePermission,
-    deleteRolePermission,
+    submitRolePermissions,
   };
 };

@@ -33,9 +33,9 @@ const formatDate = (value?: string) => {
 };
 
 export const createGradeColumns = (
-  props: Pick<GradeTableProps, "onEdit" | "onDelete">,
+  props: Pick<GradeTableProps, "onEdit" | "onDelete" | "canUpdate" | "canDelete">,
 ): DataTableColumn<Grade>[] => [
-  { header: "ID", cell: (grade) => <>{grade.id}</> },
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
   { header: "Level", cell: (grade) => <>{grade.level}</> },
   { header: "Grade", cell: (grade) => <>{grade.grade}</> },
   { header: "Description", cell: (grade) => <>{grade.des}</> },
@@ -47,12 +47,16 @@ export const createGradeColumns = (
     cellClass: "td-actions",
     cell: (grade) => (
       <div class="action-btns">
-        <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(grade)}>
-          <IconEdit />
-        </button>
-        <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(grade.id))}>
-          <IconTrash />
-        </button>
+        {props.canUpdate && (
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(grade)}>
+            <IconEdit />
+          </button>
+        )}
+        {props.canDelete && (
+          <button class="btn-icon btn-delete" title="Delete" onClick={() => props.onDelete(String(grade.id))}>
+            <IconTrash />
+          </button>
+        )}
       </div>
     ),
   },

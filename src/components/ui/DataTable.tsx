@@ -2,7 +2,7 @@ import { For, JSX, Show, createMemo, createSignal } from "solid-js";
 
 export interface DataTableColumn<T> {
   header: string;
-  cell: (row: T) => JSX.Element;
+  cell: (row: T, index: number) => JSX.Element;
   headerStyle?: JSX.CSSProperties;
   cellClass?: string;
 }
@@ -111,10 +111,14 @@ function DataTable<T>(props: DataTableProps<T>) {
               </thead>
               <tbody>
                 <For each={pagedRows()}>
-                  {(row) => (
+                  {(row, index) => (
                     <tr>
                       <For each={props.columns}>
-                        {(column) => <td class={column.cellClass}>{column.cell(row)}</td>}
+                        {(column) => (
+                          <td class={column.cellClass}>
+                            {column.cell(row, (page() - 1) * itemsPerPage() + index())}
+                          </td>
+                        )}
                       </For>
                     </tr>
                   )}

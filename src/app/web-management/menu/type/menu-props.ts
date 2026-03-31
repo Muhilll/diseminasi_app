@@ -3,6 +3,8 @@ import type { Menu, MenuFormData } from "./menu";
 export interface MenuTableProps {
   menus: Menu[];
   isLoading: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
   onEdit: (menu: Menu) => void;
   onDelete: (id: string) => void;
 }

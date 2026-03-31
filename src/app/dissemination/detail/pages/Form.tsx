@@ -7,6 +7,20 @@ const DisseminationDetailForm: Component<DisseminationDetailFormProps> = (props)
     initialData: () => props.initialData,
   });
 
+  const getImageLabel = () => {
+    const image = formData().image;
+
+    if (image instanceof File) {
+      return image.name;
+    }
+
+    if (typeof image === "string" && image) {
+      return "Current image selected";
+    }
+
+    return "No file chosen";
+  };
+
   const handleSubmit = (e: Event) => {
     e.preventDefault();
     props.onSubmit(formData());
@@ -93,15 +107,30 @@ const DisseminationDetailForm: Component<DisseminationDetailFormProps> = (props)
       </div>
 
       <div class="form-group">
-        <label for="image">Image URL</label>
-        <input
-          id="image"
-          type="text"
-          value={formData().image}
-          onChange={(e) => handleChange("image", e.target.value)}
-          placeholder="Image URL"
-          disabled={props.isLoading}
-        />
+        <label for="image">Image</label>
+        <div class="file-input-field">
+          <label
+            for="image"
+            class={`file-input-button${props.isLoading ? " is-disabled" : ""}`}
+          >
+            Choose Image
+          </label>
+          <span class="file-input-name">{getImageLabel()}</span>
+          <input
+            id="image"
+            class="file-input-native"
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              handleChange("image", e.currentTarget.files?.[0] || null)
+            }
+            required={!props.initialData}
+            disabled={props.isLoading}
+          />
+        </div>
+        {typeof formData().image === "string" && formData().image ? (
+          <small class="form-helper-text">Current image is already saved.</small>
+        ) : null}
       </div>
 
       <div class="form-group" style={{ "grid-column": "1 / -1" }}>

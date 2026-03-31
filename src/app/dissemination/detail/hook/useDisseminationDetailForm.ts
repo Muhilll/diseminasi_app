@@ -50,7 +50,7 @@ export const useDisseminationDetailForm = (
 
   const handleChange = (
     field: keyof DisseminationDetailFormData,
-    value: string,
+    value: string | File | null,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

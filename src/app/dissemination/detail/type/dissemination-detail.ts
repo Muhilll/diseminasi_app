@@ -22,7 +22,7 @@ export interface CreateDisseminationDetailInput {
   methode: string;
   participants: string;
   result: string;
-  image: string;
+  image?: File;
 }
 
 export interface UpdateDisseminationDetailInput {
@@ -34,7 +34,7 @@ export interface UpdateDisseminationDetailInput {
   methode?: string;
   participants?: string;
   result?: string;
-  image?: string;
+  image?: File;
 }
 
 export interface DisseminationDetailFormData {
@@ -45,5 +45,5 @@ export interface DisseminationDetailFormData {
   methode: string;
   participants: string;
   result: string;
-  image: string;
+  image: File | string | null;
 }

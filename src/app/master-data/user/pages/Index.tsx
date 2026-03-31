@@ -3,6 +3,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import PageHeader from "../../../../components/ui/PageHeader";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { useUserManagement } from "../hook/useUserManagement";
 import UserTable from "./Table";
 import UserForm from "./Form";
@@ -26,6 +27,7 @@ const IconPlusCircle = () => (
 
 const UserPage: Component = () => {
   const userManagement = useUserManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -34,12 +36,12 @@ const UserPage: Component = () => {
       <PageHeader
         title="User Management"
         description="Managing the strategic distribution of users across the system."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={userManagement.openCreateForm}>
             <IconPlusCircle />
             Add New User
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={userManagement.error()}>
@@ -79,6 +81,8 @@ const UserPage: Component = () => {
       <UserTable
         users={userManagement.users()}
         isLoading={userManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={userManagement.handleEdit}
         onDelete={userManagement.requestDelete}
       />

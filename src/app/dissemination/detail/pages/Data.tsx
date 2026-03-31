@@ -150,22 +150,26 @@ const DisseminationDetailList: Component<DisseminationDetailListProps> = (props)
               </div>
 
               <div class="dissemination-detail-card-actions">
-                <button
-                  type="button"
-                  class="dissemination-detail-action-btn"
-                  onClick={() => props.onEdit(detail)}
-                >
-                  <IconEdit />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  class="dissemination-detail-action-btn is-danger"
-                  onClick={() => props.onDelete(String(detail.id))}
-                >
-                  <IconTrash />
-                  Delete
-                </button>
+                {props.canUpdate && (
+                  <button
+                    type="button"
+                    class="dissemination-detail-action-btn"
+                    onClick={() => props.onEdit(detail)}
+                  >
+                    <IconEdit />
+                    Edit
+                  </button>
+                )}
+                {props.canDelete && (
+                  <button
+                    type="button"
+                    class="dissemination-detail-action-btn is-danger"
+                    onClick={() => props.onDelete(String(detail.id))}
+                  >
+                    <IconTrash />
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           </article>

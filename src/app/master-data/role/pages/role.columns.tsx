@@ -53,9 +53,9 @@ const formatDate = (value?: string) => {
 };
 
 export const createRoleColumns = (
-  props: Pick<RoleTableProps, "onEdit" | "onDelete">,
+  props: Pick<RoleTableProps, "onEdit" | "onDelete" | "canUpdate" | "canDelete">,
 ): DataTableColumn<Role>[] => [
-  { header: "ID", cell: (role) => <>{role.id}</> },
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
   { header: "Code", cell: (role) => <>{role.code}</> },
   { header: "Name", cell: (role) => <>{role.name}</> },
   { header: "Created At", cell: (role) => <>{formatDate(role.created_at)}</> },
@@ -66,16 +66,20 @@ export const createRoleColumns = (
     cellClass: "td-actions",
     cell: (role) => (
       <div class="action-btns">
-        <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(role)}>
-          <IconEdit />
-        </button>
-        <button
-          class="btn-icon btn-delete"
-          title="Delete"
-          onClick={() => props.onDelete(String(role.id))}
-        >
-          <IconTrash />
-        </button>
+        {props.canUpdate && (
+          <button class="btn-icon btn-edit" title="Edit" onClick={() => props.onEdit(role)}>
+            <IconEdit />
+          </button>
+        )}
+        {props.canDelete && (
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            onClick={() => props.onDelete(String(role.id))}
+          >
+            <IconTrash />
+          </button>
+        )}
       </div>
     ),
   },

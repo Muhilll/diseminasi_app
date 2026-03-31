@@ -7,6 +7,8 @@ import type {
 
 export interface DisseminationDetailListProps {
   details: DisseminationDetail[];
+  canUpdate?: boolean;
+  canDelete?: boolean;
   onEdit: (detail: DisseminationDetail) => void;
   onDelete: (id: string) => void;
 }

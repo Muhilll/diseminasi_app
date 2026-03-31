@@ -4,6 +4,8 @@ import type { User, UserFormData } from "./user";
 export interface UserTableProps {
   users: User[];
   isLoading: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
   onEdit: (user: User) => void;
   onDelete: (id: string) => void;
 }

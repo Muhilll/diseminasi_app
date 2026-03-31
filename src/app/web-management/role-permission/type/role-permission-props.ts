@@ -1,17 +1,20 @@
 import type {
+  RolePermissionMatrixItem,
   RolePermission,
-  RolePermissionFormData,
 } from "./role-permission";
+import type { Role } from "../../../master-data/role/type/role";
 
 export interface RolePermissionTableProps {
-  rolePermissions: RolePermission[];
+  roles: Role[];
   isLoading: boolean;
-  onEdit: (rolePermission: RolePermission) => void;
-  onDelete: (id: string) => void;
+  rolePermissions: RolePermission[];
+  canUpdate?: boolean;
+  onManagePermissions: (role: Role) => void;
 }
 
 export interface RolePermissionFormProps {
-  initialData?: RolePermission;
-  onSubmit: (data: RolePermissionFormData) => void;
+  role?: Role | null;
+  items: RolePermissionMatrixItem[];
+  onSubmit: (items: RolePermissionMatrixItem[]) => void;
   isLoading?: boolean;
 }

@@ -18,10 +18,13 @@ interface ApiResponse<T> {
  */
 function getAuthHeaders(
   includeAppToken: boolean = true,
+  isFormData: boolean = false,
 ): Record<string, string> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   // Get JWT token from localStorage
   const token = localStorage.getItem("authToken");
@@ -49,9 +52,12 @@ export async function apiCall<T>(
     const token = localStorage.getItem("authToken");
     const includeAppToken = !!token;
 
+    const isFormData =
+      typeof FormData !== "undefined" && options?.body instanceof FormData;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
-        ...getAuthHeaders(includeAppToken),
+        ...getAuthHeaders(includeAppToken, isFormData),
         ...options?.headers,
       },
       ...options,
@@ -76,8 +82,20 @@ export async function apiCall<T>(
 export const api = {
   get: <T>(endpoint: string) => apiCall<T>(endpoint, { method: "GET" }),
   post: <T>(endpoint: string, body: unknown) =>
-    apiCall<T>(endpoint, { method: "POST", body: JSON.stringify(body) }),
+    apiCall<T>(endpoint, {
+      method: "POST",
+      body:
+        typeof FormData !== "undefined" && body instanceof FormData
+          ? body
+          : JSON.stringify(body),
+    }),
   put: <T>(endpoint: string, body: unknown) =>
-    apiCall<T>(endpoint, { method: "PUT", body: JSON.stringify(body) }),
+    apiCall<T>(endpoint, {
+      method: "PUT",
+      body:
+        typeof FormData !== "undefined" && body instanceof FormData
+          ? body
+          : JSON.stringify(body),
+    }),
   delete: <T>(endpoint: string) => apiCall<T>(endpoint, { method: "DELETE" }),
 };

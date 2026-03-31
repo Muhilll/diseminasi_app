@@ -3,6 +3,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import Modal from "../../../../components/ui/Modal";
 import PageHeader from "../../../../components/ui/PageHeader";
 import Toast from "../../../../components/ui/Toast";
+import { usePagePermissions } from "../../../../hooks/usePagePermissions";
 import { useGradeManagement } from "../hook/useGradeManagement";
 import GradeForm from "./Form";
 import GradeTable from "./Table";
@@ -17,6 +18,7 @@ const IconPlusCircle = () => (
 
 const GradePage: Component = () => {
   const gradeManagement = useGradeManagement();
+  const permissions = usePagePermissions();
 
   return (
     <div class="user-page">
@@ -25,12 +27,12 @@ const GradePage: Component = () => {
       <PageHeader
         title="Grade Management"
         description="Manage grades used across the system."
-        action={
+        action={permissions.canCreate() ? (
           <button class="btn-create" onClick={gradeManagement.openCreateForm}>
             <IconPlusCircle />
             Add New Grade
           </button>
-        }
+        ) : undefined}
       />
 
       <Show when={gradeManagement.error()}>
@@ -66,6 +68,8 @@ const GradePage: Component = () => {
       <GradeTable
         grades={gradeManagement.grades()}
         isLoading={gradeManagement.isLoading()}
+        canUpdate={permissions.canUpdate()}
+        canDelete={permissions.canDelete()}
         onEdit={gradeManagement.handleEdit}
         onDelete={gradeManagement.requestDelete}
       />
