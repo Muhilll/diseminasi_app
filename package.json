@@ -20,6 +20,7 @@
     "@solidjs/router": "^0.16.1",
     "docx": "^9.5.1",
     "html2pdf.js": "^0.10.3",
+    "serve": "^14.2.6",
     "solid-js": "^1.9.5"
   }
 }
