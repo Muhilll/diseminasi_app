@@ -1,11 +1,12 @@
-const serve = require("serve");
+import serve from "serve";
 
-const port = process.env.PORT || 8080; // Railway biasanya pakai 8080, tapi process.env.PORT akan menangkapnya otomatis
+// Pastikan port menggunakan variable dari Railway
+const port = process.env.PORT || 8080;
 
 serve("dist", {
-  port,
-  host: "0.0.0.0", // TAMBAHKAN INI agar bisa diakses secara publik
-  single: true,    // Bagus untuk React/Vue (SPA) agar routing tidak 404 saat di-refresh
+  port: port,
+  host: "0.0.0.0", // Wajib agar Railway bisa melakukan health check
+  single: true,
 });
 
-console.log(`Server running on port ${port}`);
+console.log(`Server is running on port ${port}`);
