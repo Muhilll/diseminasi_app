@@ -1,6 +1,12 @@
 import { Component } from "solid-js";
+import logoImage from "../../../../../assets/dissemination/logo.png";
 import type { Dissemination } from "../../../type/dissemination";
-import { formatMonthYear, formatYear, REPORT_TITLE } from "./report.utils";
+import {
+  formatMonthYear,
+  formatYear,
+  getKabupatenLabel,
+  toUpperSafe,
+} from "./report.utils";
 
 interface CoverProps {
   dissemination: Dissemination;
@@ -8,14 +14,14 @@ interface CoverProps {
 
 const Cover: Component<CoverProps> = (props) => {
   return (
-    <section class="report-page report-cover page-break">
+    <section class="report-page report-cover">
       <div class="report-cover-inner">
         <div class="report-cover-head">
-          <h1>{REPORT_TITLE}</h1>
+          <h1>{props.dissemination.title || "-"}</h1>
 
           <div class="report-cover-location">
-            <p>WILAYAH BINAAN DESA {props.dissemination.village || "-"}</p>
-            <p>KECAMATAN {props.dissemination.district || "-"}</p>
+            <p>WILAYAH BINAAN DESA {toUpperSafe(props.dissemination.village || "-")}</p>
+            <p>KECAMATAN {toUpperSafe(props.dissemination.district || "-")}</p>
           </div>
 
           <p class="report-cover-month">
@@ -24,18 +30,18 @@ const Cover: Component<CoverProps> = (props) => {
         </div>
 
         <div class="report-cover-logo-wrap">
-          <div class="report-cover-logo">BPP</div>
+          <img class="report-cover-logo" src={logoImage} alt="Logo BPP" />
         </div>
 
         <div class="report-cover-author">
           <p>Disusun Oleh :</p>
-          <strong>{props.dissemination.user?.name || "-"}</strong>
+          <strong>{(props.dissemination.user?.name || "-").toUpperCase()}</strong>
           <span>NIP. {props.dissemination.user?.employee_id || "-"}</span>
         </div>
 
         <div class="report-cover-footer">
-          <p>BALAI PENYULUHAN PERTANIAN (BPP)</p>
-          <p>{(props.dissemination.city || "-").toUpperCase()}</p>
+          <p>BALAI PERTANIAN (BPP) {props.dissemination.district?.toUpperCase() || "-"}</p>
+          <p>{getKabupatenLabel(props.dissemination.city)}</p>
           <p>{formatYear(props.dissemination.date)}</p>
         </div>
       </div>

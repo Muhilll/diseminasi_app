@@ -609,6 +609,10 @@ body {
   color: var(--green-800);
 }
 
+.dissemination-detail-text-block {
+  white-space: pre-line;
+}
+
 .dissemination-detail-card-field-full {
   grid-column: 1 / -1;
 }
@@ -658,6 +662,7 @@ body {
   color: #4b5453;
   font-size: 15px;
   line-height: 1.8;
+  margin: 0;
 }
 
 .dissemination-detail-card-actions {

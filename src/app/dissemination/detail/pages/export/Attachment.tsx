@@ -14,18 +14,22 @@ const Attachment: Component<AttachmentProps> = (props) => {
     <>
       <For each={pages()}>
         {(pageItems, index) => (
-          <section
-            class={`report-page report-attachment${
-              index() < pages().length - 1 ? " page-break" : ""
-            }`}
-          >
+          <section class="report-page report-attachment">
             <h2>DOKUMENTASI KEGIATAN</h2>
 
             <div class="report-attachment-grid">
               <For each={pageItems}>
                 {(detail) => (
                   <figure class="report-attachment-item">
-                    <img src={detail.image} alt={detail.material || "Dokumentasi"} />
+                    <div class="report-attachment-image-frame">
+                      {detail.image ? (
+                        <img src={detail.image} alt={detail.material || "Dokumentasi"} />
+                      ) : (
+                        <div class="report-attachment-placeholder">
+                          <span>Dokumentasi belum tersedia</span>
+                        </div>
+                      )}
+                    </div>
                     <figcaption>{formatShortDate(detail.date)}</figcaption>
                   </figure>
                 )}

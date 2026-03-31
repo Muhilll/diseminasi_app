@@ -11,11 +11,21 @@ export const exportReportPdf = async (params: ExportPdfParams) => {
   const tempWrapper = document.createElement("div");
   const clonedElement = params.element.cloneNode(true) as HTMLElement;
 
+  clonedElement.style.position = "static";
+  clonedElement.style.left = "auto";
+  clonedElement.style.top = "auto";
+  clonedElement.style.zIndex = "auto";
+  clonedElement.style.opacity = "1";
+  clonedElement.style.pointerEvents = "auto";
+  clonedElement.style.width = "210mm";
+  clonedElement.style.background = "white";
+  clonedElement.style.overflow = "visible";
+
   tempWrapper.style.position = "fixed";
   tempWrapper.style.left = "0";
   tempWrapper.style.top = "0";
   tempWrapper.style.zIndex = "-1";
-  tempWrapper.style.background = "#f3f4f6";
+  tempWrapper.style.background = "white";
   tempWrapper.style.padding = "0";
   tempWrapper.style.margin = "0";
   tempWrapper.style.opacity = "1";
@@ -32,7 +42,7 @@ export const exportReportPdf = async (params: ExportPdfParams) => {
         html2canvas: {
           scale: 2,
           useCORS: true,
-          backgroundColor: "#f3f4f6",
+          backgroundColor: "white",
         },
         jsPDF: {
           unit: "mm",

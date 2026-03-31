@@ -5,6 +5,7 @@
 
 import { Route } from '@solidjs/router';
 import { authRoutes } from '../app/auth/routes';
+import { absensiRoutes } from '../app/absensi/route';
 import { dashboardRoutes } from '../app/dashboard/routes';
 import { disseminationRoutes, disseminationStandaloneRoutes } from '../app/dissemination/route';
 import { gradeRoutes } from '../app/master-data/grade/route';
@@ -39,6 +40,7 @@ export const routeConfig = (
     {/* Protected Routes with Layout */}
     <Route component={LayoutedRoutes}>
       {dashboardRoutes}
+      {absensiRoutes}
       {disseminationRoutes}
       {gradeRoutes}
       {menuRoutes}

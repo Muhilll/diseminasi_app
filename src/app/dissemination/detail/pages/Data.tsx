@@ -112,7 +112,9 @@ const DisseminationDetailList: Component<DisseminationDetailListProps> = (props)
               <div class="dissemination-detail-card-grid">
                 <div class="dissemination-detail-card-field">
                   <span>Basis / Directive</span>
-                  <strong>{detail.basis || "-"}</strong>
+                  <strong class="dissemination-detail-text-block">
+                    {detail.basis || "-"}
+                  </strong>
                 </div>
 
                 <div class="dissemination-detail-card-field">
@@ -144,7 +146,7 @@ const DisseminationDetailList: Component<DisseminationDetailListProps> = (props)
 
               <div class="dissemination-detail-result-box">
                 <span>Key Results</span>
-                <p>{detail.result || "-"}</p>
+                <p class="dissemination-detail-text-block">{detail.result || "-"}</p>
               </div>
 
               <div class="dissemination-detail-card-actions">

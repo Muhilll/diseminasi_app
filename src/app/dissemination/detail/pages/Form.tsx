@@ -14,16 +14,17 @@ const DisseminationDetailForm: Component<DisseminationDetailFormProps> = (props)
 
   return (
     <form onSubmit={handleSubmit} class="user-form">
-      <div class="form-group">
+      <div class="form-group" style={{ "grid-column": "1 / -1" }}>
         <label for="basis">Basis / Directive</label>
-        <input
+        <textarea
           id="basis"
-          type="text"
           value={formData().basis}
-          onChange={(e) => handleChange("basis", e.target.value)}
+          onInput={(e) => handleChange("basis", e.currentTarget.value)}
           placeholder="Directive or basis"
           required
           disabled={props.isLoading}
+          rows={5}
+          class="form-textarea"
         />
       </div>
 
