@@ -1,11 +1,10 @@
 import serve from "serve";
 
-// Pastikan port menggunakan variable dari Railway
-const port = process.env.PORT || 8080;
+const port = process.env.PORT;
 
 serve("dist", {
   port: port,
-  host: "0.0.0.0", // Wajib agar Railway bisa melakukan health check
+  host: "0.0.0.0",
   single: true,
 });
 
