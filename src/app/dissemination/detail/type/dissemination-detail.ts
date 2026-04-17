@@ -9,6 +9,7 @@ export interface DisseminationDetail {
   participants: string;
   result: string;
   image: string;
+  image_public_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,7 +23,8 @@ export interface CreateDisseminationDetailInput {
   methode: string;
   participants: string;
   result: string;
-  image?: File;
+  image?: string;
+  image_public_id?: string;
 }
 
 export interface UpdateDisseminationDetailInput {
@@ -34,7 +36,8 @@ export interface UpdateDisseminationDetailInput {
   methode?: string;
   participants?: string;
   result?: string;
-  image?: File;
+  image?: string;
+  image_public_id?: string;
 }
 
 export interface DisseminationDetailFormData {

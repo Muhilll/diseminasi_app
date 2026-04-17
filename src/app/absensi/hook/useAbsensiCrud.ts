@@ -1,19 +1,11 @@
 import { useToast } from "../../../hooks/useToast";
+import { uploadImageWithSignature } from "../../../services/uploads";
 import { absensiAPI } from "../service/absensi.api";
-import type { Absensi, AbsensiFormData } from "../type/absensi";
-
-const createAbsensiFormData = (data: AbsensiFormData) => {
-  const formData = new FormData();
-
-  formData.append("user_id", String(data.user_id));
-  formData.append("des", data.des);
-
-  if (data.gambar instanceof File) {
-    formData.append("gambar", data.gambar);
-  }
-
-  return formData;
-};
+import type {
+  Absensi,
+  AbsensiFormData,
+  CreateAbsensiInput,
+} from "../type/absensi";
 
 interface UseAbsensiCrudParams {
   editingAbsensi: () => Absensi | null;
@@ -28,6 +20,33 @@ interface UseAbsensiCrudParams {
 
 export const useAbsensiCrud = (params: UseAbsensiCrudParams) => {
   const { toast, showToast, clearToast } = useToast();
+
+  const createAbsensiPayload = async (
+    data: AbsensiFormData,
+    editingAbsensi: Absensi | null,
+  ): Promise<CreateAbsensiInput> => {
+    const payload: CreateAbsensiInput = {
+      user_id: data.user_id,
+      des: data.des,
+    };
+
+    if (data.gambar instanceof File) {
+      const uploaded = await uploadImageWithSignature("absensi", data.gambar);
+      payload.gambar = uploaded.secureUrl;
+      payload.gambar_public_id = uploaded.publicId;
+      return payload;
+    }
+
+    if (typeof data.gambar === "string" && data.gambar) {
+      payload.gambar = data.gambar;
+
+      if (editingAbsensi?.gambar_public_id) {
+        payload.gambar_public_id = editingAbsensi.gambar_public_id;
+      }
+    }
+
+    return payload;
+  };
 
   const fetchAbsensis = async () => {
     params.setIsLoading(true);
@@ -48,14 +67,23 @@ export const useAbsensiCrud = (params: UseAbsensiCrudParams) => {
   };
 
   const submitAbsensi = async (data: AbsensiFormData) => {
+    const editingAbsensi = params.editingAbsensi();
+
+    if (!editingAbsensi && !(data.gambar instanceof File) && !data.gambar) {
+      const message = "Image is required";
+      params.setError(message);
+      showToast("error", message);
+      return;
+    }
+
     params.setIsLoading(true);
     params.setError(null);
 
     try {
-      const payload = createAbsensiFormData(data);
+      const payload = await createAbsensiPayload(data, editingAbsensi);
 
-      const result = params.editingAbsensi()
-        ? await absensiAPI.update(String(params.editingAbsensi()!.id), payload)
+      const result = editingAbsensi
+        ? await absensiAPI.update(String(editingAbsensi.id), payload)
         : await absensiAPI.create(payload);
 
       if (result.success) {

@@ -1,8 +1,10 @@
 import { useToast } from "../../../../hooks/useToast";
+import { uploadImageWithSignature } from "../../../../services/uploads";
 import { disseminationAPI } from "../../service/dissemination.api";
 import { disseminationDetailAPI } from "../service/dissemination-detail.api";
 import type { Dissemination } from "../../type/dissemination";
 import type {
+  CreateDisseminationDetailInput,
   DisseminationDetail,
   DisseminationDetailFormData,
 } from "../type/dissemination-detail";
@@ -12,26 +14,42 @@ const toIsoDateString = (value: string) => {
   return Number.isNaN(date.getTime()) ? value : date.toISOString();
 };
 
-const createDisseminationDetailFormData = (
+const createDisseminationDetailPayload = async (
   disseminationId: string,
   data: DisseminationDetailFormData,
+  editingDetail: DisseminationDetail | null,
 ) => {
-  const formData = new FormData();
-
-  formData.append("disseminations_id", disseminationId);
-  formData.append("basis", data.basis);
-  formData.append("material", data.material);
-  formData.append("date", toIsoDateString(data.date));
-  formData.append("location", data.location);
-  formData.append("methode", data.methode);
-  formData.append("participants", data.participants);
-  formData.append("result", data.result);
+  const payload: CreateDisseminationDetailInput = {
+    disseminations_id: Number(disseminationId),
+    basis: data.basis,
+    material: data.material,
+    date: toIsoDateString(data.date),
+    location: data.location,
+    methode: data.methode,
+    participants: data.participants,
+    result: data.result,
+  };
 
   if (data.image instanceof File) {
-    formData.append("image", data.image);
+    const uploaded = await uploadImageWithSignature(
+      "dissemination_details",
+      data.image,
+    );
+
+    payload.image = uploaded.secureUrl;
+    payload.image_public_id = uploaded.publicId;
+    return payload;
   }
 
-  return formData;
+  if (typeof data.image === "string" && data.image) {
+    payload.image = data.image;
+
+    if (editingDetail?.image_public_id) {
+      payload.image_public_id = editingDetail.image_public_id;
+    }
+  }
+
+  return payload;
 };
 
 interface UseDisseminationDetailCrudParams {
@@ -94,8 +112,16 @@ export const useDisseminationDetailCrud = (
 
   const submitDetail = async (data: DisseminationDetailFormData) => {
     const disseminationId = params.disseminationId();
+    const editingDetail = params.editingDetail();
     if (!disseminationId) {
       const message = "Dissemination ID not found";
+      params.setError(message);
+      showToast("error", message);
+      return;
+    }
+
+    if (!editingDetail && !(data.image instanceof File) && !data.image) {
+      const message = "Image is required";
       params.setError(message);
       showToast("error", message);
       return;
@@ -105,10 +131,14 @@ export const useDisseminationDetailCrud = (
     params.setError(null);
 
     try {
-      const payload = createDisseminationDetailFormData(disseminationId, data);
+      const payload = await createDisseminationDetailPayload(
+        disseminationId,
+        data,
+        editingDetail,
+      );
 
-      const result = params.editingDetail()
-        ? await disseminationDetailAPI.update(String(params.editingDetail()!.id), payload)
+      const result = editingDetail
+        ? await disseminationDetailAPI.update(String(editingDetail.id), payload)
         : await disseminationDetailAPI.create(payload);
 
       if (result.success) {
