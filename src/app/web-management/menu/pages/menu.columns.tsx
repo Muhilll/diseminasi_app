@@ -48,6 +48,7 @@ export const createMenuColumns = (
     { header: "No", cell: (_, index) => <>{index + 1}</> },
     { header: "Name", cell: (menu) => <>{menu.name}</> },
     { header: "Path", cell: (menu) => <>{menu.path || "-"}</> },
+    { header: "Permission Path", cell: (menu) => <>{menu.permission_path || "-"}</> },
     { header: "Icon", cell: (menu) => <>{menu.icon || "-"}</> },
     { header: "Parent", cell: (menu) => <>{getParentLabel(menu)}</> },
     { header: "Created At", cell: (menu) => <>{formatDate(menu.created_at)}</> },

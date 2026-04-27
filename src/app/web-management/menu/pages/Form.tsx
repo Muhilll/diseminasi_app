@@ -46,6 +46,18 @@ const MenuForm: Component<MenuFormProps> = (props) => {
       </div>
 
       <div class="form-group">
+        <label for="permission_path">Permission Path</label>
+        <input
+          id="permission_path"
+          type="text"
+          value={formData().permission_path}
+          onChange={(e) => handleChange("permission_path", e.target.value)}
+          placeholder="/dashboard"
+          disabled={props.isLoading}
+        />
+      </div>
+
+      <div class="form-group">
         <label for="icon">Icon</label>
         <input
           id="icon"
