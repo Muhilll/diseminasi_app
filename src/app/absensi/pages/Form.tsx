@@ -61,7 +61,7 @@ const AbsensiForm: Component<AbsensiFormProps> = (props) => {
             onChange={(e) =>
               handleChange("gambar", e.currentTarget.files?.[0] || null)
             }
-            // required={!props.initialData}
+            
             disabled={props.isLoading}
           />
         </div>
