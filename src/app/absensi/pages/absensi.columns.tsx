@@ -64,6 +64,16 @@ export const createAbsensiColumns = (
     cell: (absensi) => <>{formatDate(absensi.created_at, "id-ID")}</>,
   },
   {
+    header: "Jam",
+    cell: (absensi) => {
+      const time = new Date(absensi.created_at).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return <>{time}</>;
+    },
+  },
+  {
     header: "Actions",
     headerStyle: { "text-align": "right" },
     cellClass: "td-actions",
