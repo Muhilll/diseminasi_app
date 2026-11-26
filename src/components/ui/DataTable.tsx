@@ -34,6 +34,19 @@ function extractSearchableText(value: unknown, depth = 0): string {
   return "";
 }
 
+const searchTextCache = new WeakMap<object, string>();
+
+function getRowSearchText(row: unknown): string {
+  if (row && typeof row === "object") {
+    const cached = searchTextCache.get(row);
+    if (cached !== undefined) return cached;
+    const computed = extractSearchableText(row).toLowerCase();
+    searchTextCache.set(row, computed);
+    return computed;
+  }
+  return extractSearchableText(row).toLowerCase();
+}
+
 const IconSearch = () => (
   <svg
     width="15"
@@ -101,9 +114,7 @@ function DataTable<T>(props: DataTableProps<T>) {
     const query = debouncedQuery().trim().toLowerCase();
     if (!query) return props.rows;
 
-    return props.rows.filter((row) =>
-      extractSearchableText(row).toLowerCase().includes(query),
-    );
+    return props.rows.filter((row) => getRowSearchText(row).includes(query));
   });
 
   const totalPages = createMemo(() =>

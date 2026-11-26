@@ -59,30 +59,41 @@ const AttendancePage: Component = () => {
   const [activeDayTab, setActiveDayTab] = createSignal<string>("all");
   const [selectedDate, setSelectedDate] = createSignal<string>("");
 
-  const dateFilteredRecords = createMemo(() => {
+  const groupedByTab = createMemo(() => {
     const date = selectedDate();
-    if (!date) return records();
-    return records().filter((r) => r.attendance_date === date);
+    const buckets: Record<string, AttendanceRecord[]> = {
+      all: [],
+      "0": [],
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+    };
+
+    for (const r of records()) {
+      if (date && r.attendance_date !== date) continue;
+      buckets.all.push(r);
+      const dow = getDayOfWeekFromDateStr(r.attendance_date);
+      if (dow >= 0 && dow <= 6) {
+        buckets[String(dow)].push(r);
+      }
+    }
+
+    return buckets;
   });
 
   const tabCounts = createMemo(() => {
-    const base = dateFilteredRecords();
-    const counts: Record<string, number> = { all: base.length };
-    for (let d = 0; d <= 6; d++) counts[String(d)] = 0;
-    for (const r of base) {
-      const dow = getDayOfWeekFromDateStr(r.attendance_date);
-      if (dow >= 0 && dow <= 6) counts[String(dow)] += 1;
+    const buckets = groupedByTab();
+    const counts: Record<string, number> = {};
+    for (const key of Object.keys(buckets)) {
+      counts[key] = buckets[key].length;
     }
     return counts;
   });
 
-  const visibleRecords = createMemo(() => {
-    const tab = activeDayTab();
-    const base = dateFilteredRecords();
-    if (tab === "all") return base;
-    const dayNum = Number(tab);
-    return base.filter((r) => getDayOfWeekFromDateStr(r.attendance_date) === dayNum);
-  });
+  const visibleRecords = createMemo(() => groupedByTab()[activeDayTab()] ?? []);
 
   const refreshLocation = () => {
     if (!navigator.geolocation) {
