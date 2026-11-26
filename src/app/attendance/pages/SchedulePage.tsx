@@ -1,4 +1,5 @@
 import { Component, For, Show, createMemo, createSignal, onMount } from "solid-js";
+import ConfirmModal from "../../../components/ui/ConfirmModal";
 import DataTable, { type DataTableColumn } from "../../../components/ui/DataTable";
 import Modal from "../../../components/ui/Modal";
 import PageHeader from "../../../components/ui/PageHeader";
@@ -9,33 +10,14 @@ import { attendanceSchedulesAPI } from "../service/attendance.api";
 import type { ScheduleDay, UserSchedule } from "../type/attendance";
 
 const DAY_NAMES = [
-  { day: 0, short: "Min", full: "Minggu — Malam Senin" },
-  { day: 1, short: "Sen", full: "Senin — Malam Selasa" },
-  { day: 2, short: "Sel", full: "Selasa — Malam Rabu" },
-  { day: 3, short: "Rab", full: "Rabu — Malam Kamis" },
-  { day: 4, short: "Kam", full: "Kamis — Malam Jumat" },
-  { day: 5, short: "Jum", full: "Jumat — Malam Sabtu" },
-  { day: 6, short: "Sab", full: "Sabtu — Bersih Bersama" },
+  { day: 0, short: "Min", tab: "Minggu", full: "Minggu — Malam Senin" },
+  { day: 1, short: "Sen", tab: "Senin", full: "Senin — Malam Selasa" },
+  { day: 2, short: "Sel", tab: "Selasa", full: "Selasa — Malam Rabu" },
+  { day: 3, short: "Rab", tab: "Rabu", full: "Rabu — Malam Kamis" },
+  { day: 4, short: "Kam", tab: "Kamis", full: "Kamis — Malam Jumat" },
+  { day: 5, short: "Jum", tab: "Jumat", full: "Jumat — Malam Sabtu" },
+  { day: 6, short: "Sab", tab: "Sabtu", full: "Sabtu — Bersih Bersama" },
 ];
-
-const IconChevron = (props: { open: boolean }) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    style={{
-      transform: props.open ? "rotate(90deg)" : "rotate(0deg)",
-      transition: "transform 0.15s ease",
-    }}
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 const SchedulePage: Component = () => {
   const permissions = usePagePermissions();
@@ -45,20 +27,23 @@ const SchedulePage: Component = () => {
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [viewMode, setViewMode] = createSignal<"by-day" | "by-user">("by-day");
-  const [openDays, setOpenDays] = createSignal<Record<number, boolean>>({
-    0: true,
-    1: true,
-    2: true,
-    3: true,
-    4: true,
-    5: true,
-    6: false,
-  });
+  const [activeDay, setActiveDay] = createSignal<number>(0);
   const [daySearch, setDaySearch] = createSignal("");
 
   const [editingUser, setEditingUser] = createSignal<UserSchedule | null>(null);
   const [draftDays, setDraftDays] = createSignal<ScheduleDay[]>([]);
   const [isSaving, setIsSaving] = createSignal(false);
+
+  const [addingDay, setAddingDay] = createSignal<{ day: number; full: string } | null>(
+    null,
+  );
+  const [selectedAddUserId, setSelectedAddUserId] = createSignal("");
+  const [removingTarget, setRemovingTarget] = createSignal<{
+    userId: number;
+    userName: string;
+    day: number;
+    dayName: string;
+  } | null>(null);
 
   const fetchSchedules = async () => {
     setIsLoading(true);
@@ -73,14 +58,6 @@ const SchedulePage: Component = () => {
   };
 
   onMount(fetchSchedules);
-
-  const toggleDayAccordion = (day: number) => {
-    setOpenDays((prev) => ({ ...prev, [day]: !prev[day] }));
-  };
-
-  const setAllDaysOpen = (open: boolean) => {
-    setOpenDays({ 0: open, 1: open, 2: open, 3: open, 4: open, 5: open, 6: open });
-  };
 
   const groupedByDay = createMemo(() => {
     const query = daySearch().trim().toLowerCase();
@@ -99,6 +76,10 @@ const SchedulePage: Component = () => {
     });
   });
 
+  const activeDayGroup = createMemo(
+    () => groupedByDay().find((g) => g.day === activeDay()) ?? groupedByDay()[0],
+  );
+
   const openEdit = (user: UserSchedule) => {
     setEditingUser(user);
     setDraftDays(
@@ -115,6 +96,59 @@ const SchedulePage: Component = () => {
         item.day_of_week === day ? { ...item, is_active: !item.is_active } : item,
       ),
     );
+  };
+
+  const availableUsersForAddDay = createMemo(() => {
+    const target = addingDay();
+    if (!target) return [];
+    return rows().filter(
+      (u) => !u.schedules.find((s) => s.day_of_week === target.day)?.is_active,
+    );
+  });
+
+  const openAddModal = (day: number, full: string, e: MouseEvent) => {
+    e.stopPropagation();
+    setSelectedAddUserId("");
+    setAddingDay({ day, full });
+  };
+
+  const handleAddMember = async (e: Event) => {
+    e.preventDefault();
+    const target = addingDay();
+    const userId = Number(selectedAddUserId());
+    if (!target || !userId) return;
+
+    setIsSaving(true);
+    const res = await attendanceSchedulesAPI.updateByUserId(userId, [
+      { day_of_week: target.day, is_active: true },
+    ]);
+    if (res.success) {
+      setAddingDay(null);
+      setActiveDay(target.day);
+      await fetchSchedules();
+      showToast("success", "Anggota ditambahkan ke jadwal");
+    } else {
+      showToast("error", res.error || "Gagal menambahkan anggota");
+    }
+    setIsSaving(false);
+  };
+
+  const handleConfirmRemove = async () => {
+    const target = removingTarget();
+    if (!target) return;
+
+    setIsSaving(true);
+    const res = await attendanceSchedulesAPI.updateByUserId(target.userId, [
+      { day_of_week: target.day, is_active: false },
+    ]);
+    if (res.success) {
+      setRemovingTarget(null);
+      await fetchSchedules();
+      showToast("success", `${target.userName} dihapus dari ${target.dayName}`);
+    } else {
+      showToast("error", res.error || "Gagal menghapus anggota");
+    }
+    setIsSaving(false);
   };
 
   const handleSave = async (e: Event) => {
@@ -286,178 +320,305 @@ const SchedulePage: Component = () => {
         </div>
       </Modal>
 
-      <Show when={viewMode() === "by-day"}>
-        <div
-          style={{
-            display: "flex",
-            "justify-content": "space-between",
-            "align-items": "center",
-            gap: "12px",
-            "margin-bottom": "16px",
-            "flex-wrap": "wrap",
-          }}
-        >
-          <input
-            type="search"
-            class="table-search-input"
-            style={{ width: "min(100%, 300px)", padding: "0 12px" }}
-            placeholder="Cari nama atau email anggota..."
-            value={daySearch()}
-            onInput={(e) => setDaySearch(e.currentTarget.value)}
-          />
-
-          <div style={{ display: "flex", gap: "8px" }}>
+      <Modal open={!!addingDay()} onClose={() => setAddingDay(null)}>
+        <div class="form-section">
+          <div class="form-section-header">
+            <h2>Tambah Anggota — {addingDay()?.full}</h2>
             <button
               type="button"
               class="btn-secondary"
-              onClick={() => setAllDaysOpen(true)}
+              onClick={() => setAddingDay(null)}
             >
-              Buka Semua
-            </button>
-            <button
-              type="button"
-              class="btn-secondary"
-              onClick={() => setAllDaysOpen(false)}
-            >
-              Tutup Semua
+              Cancel
             </button>
           </div>
-        </div>
 
+          <form onSubmit={handleAddMember} class="user-form">
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="add_member_select">Pilih Anggota</label>
+              <select
+                id="add_member_select"
+                value={selectedAddUserId()}
+                onChange={(e) => setSelectedAddUserId(e.currentTarget.value)}
+                required
+                disabled={isSaving()}
+              >
+                <option value="">-- Pilih user --</option>
+                <For each={availableUsersForAddDay()}>
+                  {(u) => (
+                    <option value={String(u.user_id)}>
+                      {u.user_name} ({u.user_email})
+                    </option>
+                  )}
+                </For>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSaving() || !selectedAddUserId()}
+            >
+              {isSaving() ? "Menyimpan..." : "Tambahkan"}
+            </button>
+          </form>
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        open={!!removingTarget()}
+        title="Hapus dari Jadwal"
+        message={`Hapus ${removingTarget()?.userName || ""} dari jadwal ${removingTarget()?.dayName || ""}?`}
+        confirmLabel={isSaving() ? "Menghapus..." : "Hapus"}
+        confirmLoading={isSaving()}
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setRemovingTarget(null)}
+      />
+
+      <Show when={viewMode() === "by-day"}>
         <Show when={isLoading()}>
           <div class="form-section">Loading schedules...</div>
         </Show>
 
         <Show when={!isLoading()}>
-          <div style={{ display: "grid", gap: "12px" }}>
-            <For each={groupedByDay()}>
-              {(group) => {
-                const isOpen = () => !!openDays()[group.day];
-                return (
-                  <div class="app-table-card">
-                    <button
-                      type="button"
-                      onClick={() => toggleDayAccordion(group.day)}
+          <div>
+            <div
+              style={{
+                display: "flex",
+                "justify-content": "space-between",
+                "align-items": "flex-end",
+                gap: "12px",
+                "flex-wrap": "wrap",
+                "border-bottom": "3px solid var(--green-800)",
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px", "flex-wrap": "wrap" }}>
+                <For each={groupedByDay()}>
+                  {(group) => {
+                    const isSelected = () => activeDay() === group.day;
+                    return (
+                      <button
+                        type="button"
+                        style={{
+                          display: "inline-flex",
+                          "align-items": "center",
+                          gap: "6px",
+                          padding: "9px 14px",
+                          border: "none",
+                          "border-top-left-radius": "6px",
+                          "border-top-right-radius": "6px",
+                          background: isSelected() ? "var(--green-800)" : "var(--gray-200)",
+                          color: isSelected() ? "#fff" : "var(--gray-700)",
+                          "font-size": "13px",
+                          "font-weight": "600",
+                          "font-family": "inherit",
+                          cursor: "pointer",
+                          transition: "background 0.15s, color 0.15s",
+                        }}
+                        onClick={() => setActiveDay(group.day)}
+                      >
+                        <span>{group.tab}</span>
+                        <span
+                          style={{
+                            padding: "1px 6px",
+                            "border-radius": "999px",
+                            "font-size": "11px",
+                            background: isSelected()
+                              ? "rgba(255,255,255,0.22)"
+                              : "rgba(255,255,255,0.7)",
+                            color: isSelected() ? "#fff" : "var(--gray-700)",
+                          }}
+                        >
+                          {group.members.length}
+                        </span>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </div>
+
+            <Show when={activeDayGroup()}>
+              {(group) => (
+                <div class="app-table-card" style={{ "border-top-left-radius": "0" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      "align-items": "center",
+                      "justify-content": "space-between",
+                      gap: "12px",
+                      "flex-wrap": "wrap",
+                      padding: "16px 20px",
+                      "border-bottom": "1px solid var(--gray-100)",
+                      background: "var(--gray-50)",
+                    }}
+                  >
+                    <strong style={{ "font-size": "15px", color: "var(--gray-900)" }}>
+                      {group().full} ({group().members.length} anggota)
+                    </strong>
+
+                    <div
                       style={{
-                        width: "100%",
                         display: "flex",
                         "align-items": "center",
-                        "justify-content": "space-between",
-                        padding: "16px 20px",
-                        background: isOpen() ? "var(--gray-50)" : "#fff",
-                        border: "none",
-                        cursor: "pointer",
-                        "text-align": "left",
-                        "font-family": "inherit",
+                        gap: "10px",
+                        "flex-wrap": "wrap",
                       }}
                     >
-                      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
-                        <IconChevron open={isOpen()} />
-                        <strong style={{ "font-size": "15px", color: "var(--gray-900)" }}>
-                          {group.full}
-                        </strong>
+                      <div style={{ position: "relative", width: "240px", "max-width": "100%", "flex-shrink": "0" }}>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            position: "absolute",
+                            left: "11px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "var(--gray-400)",
+                            display: "flex",
+                            "pointer-events": "none",
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          </svg>
+                        </span>
+                        <input
+                          type="search"
+                          placeholder="Cari anggota..."
+                          value={daySearch()}
+                          onInput={(e) => setDaySearch(e.currentTarget.value)}
+                          style={{
+                            width: "100%",
+                            height: "36px",
+                            padding: "0 10px 0 32px",
+                            border: "1px solid var(--gray-200)",
+                            "border-radius": "var(--radius-sm)",
+                            background: "#fff",
+                            color: "var(--gray-900)",
+                            "font-size": "13px",
+                            "font-family": "inherit",
+                            outline: "none",
+                          }}
+                        />
                       </div>
-                      <span
-                        style={{
-                          padding: "3px 10px",
-                          "border-radius": "999px",
-                          "font-size": "12px",
-                          "font-weight": "600",
-                          background: "var(--green-100)",
-                          color: "var(--green-800)",
-                        }}
-                      >
-                        {group.members.length} anggota
-                      </span>
-                    </button>
 
-                    <Show when={isOpen()}>
+                      <Show when={permissions.canUpdate()}>
+                        <button
+                          type="button"
+                          class="btn-create"
+                          style={{
+                            height: "36px",
+                            padding: "0 14px",
+                            "font-size": "12.5px",
+                            "flex-shrink": "0",
+                          }}
+                          onClick={(e) => openAddModal(group().day, group().full, e)}
+                        >
+                          + Tambah
+                        </button>
+                      </Show>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "18px 20px" }}>
+                    <Show
+                      when={group().members.length > 0}
+                      fallback={
+                        <div style={{ color: "var(--gray-400)", "font-size": "13px" }}>
+                          Tidak ada anggota terjadwal di hari ini.
+                        </div>
+                      }
+                    >
                       <div
                         style={{
-                          padding: "14px 20px 18px",
-                          "border-top": "1px solid var(--gray-100)",
+                          display: "grid",
+                          "grid-template-columns": "repeat(auto-fill, minmax(260px, 1fr))",
+                          gap: "10px",
                         }}
                       >
-                        <Show
-                          when={group.members.length > 0}
-                          fallback={
-                            <div style={{ color: "var(--gray-400)", "font-size": "13px" }}>
-                              Tidak ada anggota terjadwal di hari ini.
-                            </div>
-                          }
-                        >
-                          <div
-                            style={{
-                              display: "grid",
-                              "grid-template-columns": "repeat(auto-fill, minmax(260px, 1fr))",
-                              gap: "10px",
-                            }}
-                          >
-                            <For each={group.members}>
-                              {(member) => (
+                        <For each={group().members}>
+                          {(member) => (
+                            <div
+                              style={{
+                                display: "flex",
+                                "align-items": "center",
+                                "justify-content": "space-between",
+                                gap: "10px",
+                                padding: "10px 14px",
+                                border: "1px solid var(--gray-200)",
+                                "border-radius": "8px",
+                                background: "#fff",
+                              }}
+                            >
+                              <div style={{ "min-width": "0" }}>
                                 <div
                                   style={{
-                                    display: "flex",
-                                    "align-items": "center",
-                                    "justify-content": "space-between",
-                                    gap: "10px",
-                                    padding: "10px 14px",
-                                    border: "1px solid var(--gray-200)",
-                                    "border-radius": "8px",
-                                    background: "#fff",
+                                    "font-weight": "600",
+                                    "font-size": "13.5px",
+                                    color: "var(--gray-900)",
+                                    overflow: "hidden",
+                                    "text-overflow": "ellipsis",
+                                    "white-space": "nowrap",
                                   }}
                                 >
-                                  <div style={{ "min-width": "0" }}>
-                                    <div
-                                      style={{
-                                        "font-weight": "600",
-                                        "font-size": "13.5px",
-                                        color: "var(--gray-900)",
-                                        overflow: "hidden",
-                                        "text-overflow": "ellipsis",
-                                        "white-space": "nowrap",
-                                      }}
-                                    >
-                                      {member.user_name}
-                                    </div>
-                                    <div
-                                      style={{
-                                        "font-size": "12px",
-                                        color: "var(--gray-500)",
-                                        overflow: "hidden",
-                                        "text-overflow": "ellipsis",
-                                        "white-space": "nowrap",
-                                      }}
-                                    >
-                                      {member.user_email}
-                                    </div>
-                                  </div>
-
-                                  <Show when={permissions.canUpdate()}>
-                                    <button
-                                      type="button"
-                                      class="btn-secondary"
-                                      style={{
-                                        padding: "5px 10px",
-                                        "font-size": "12px",
-                                        "flex-shrink": "0",
-                                      }}
-                                      onClick={() => openEdit(member)}
-                                    >
-                                      Edit
-                                    </button>
-                                  </Show>
+                                  {member.user_name}
                                 </div>
-                              )}
-                            </For>
-                          </div>
-                        </Show>
+                                <div
+                                  style={{
+                                    "font-size": "12px",
+                                    color: "var(--gray-500)",
+                                    overflow: "hidden",
+                                    "text-overflow": "ellipsis",
+                                    "white-space": "nowrap",
+                                  }}
+                                >
+                                  {member.user_email}
+                                </div>
+                              </div>
+
+                              <Show when={permissions.canUpdate()}>
+                                <button
+                                  type="button"
+                                  class="btn-icon btn-delete"
+                                  title="Hapus dari hari ini"
+                                  style={{
+                                    width: "auto",
+                                    padding: "5px 10px",
+                                    "font-size": "12px",
+                                    "flex-shrink": "0",
+                                  }}
+                                  onClick={() =>
+                                    setRemovingTarget({
+                                      userId: member.user_id,
+                                      userName: member.user_name,
+                                      day: group().day,
+                                      dayName: group().full,
+                                    })
+                                  }
+                                >
+                                  Hapus
+                                </button>
+                              </Show>
+                            </div>
+                          )}
+                        </For>
                       </div>
                     </Show>
                   </div>
-                );
-              }}
-            </For>
+                </div>
+              )}
+            </Show>
           </div>
         </Show>
       </Show>

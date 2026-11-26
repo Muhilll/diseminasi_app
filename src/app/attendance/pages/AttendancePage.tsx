@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, createSignal, onMount } from "solid-js";
+import { Component, For, Show, createMemo, createSignal, onMount } from "solid-js";
 import ConfirmModal from "../../../components/ui/ConfirmModal";
 import DataTable from "../../../components/ui/DataTable";
 import Modal from "../../../components/ui/Modal";
@@ -10,6 +10,23 @@ import { uploadImageWithSignature } from "../../../services/uploads";
 import { attendanceAPI } from "../service/attendance.api";
 import type { AttendanceRecord, TodayAttendanceStatus } from "../type/attendance";
 import { createAttendanceColumns } from "./attendance.columns";
+
+const DAY_TABS = [
+  { key: "all", label: "Semua", day: null },
+  { key: "0", label: "Minggu", day: 0 },
+  { key: "1", label: "Senin", day: 1 },
+  { key: "2", label: "Selasa", day: 2 },
+  { key: "3", label: "Rabu", day: 3 },
+  { key: "4", label: "Kamis", day: 4 },
+  { key: "5", label: "Jumat", day: 5 },
+  { key: "6", label: "Sabtu", day: 6 },
+] as const;
+
+function getDayOfWeekFromDateStr(dateStr: string): number {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return -1;
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
 
 function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -39,6 +56,44 @@ const AttendancePage: Component = () => {
   const [note, setNote] = createSignal("");
   const [isSubmitting, setIsSubmitting] = createSignal(false);
   const [deletingId, setDeletingId] = createSignal<string | null>(null);
+  const [activeDayTab, setActiveDayTab] = createSignal<string>("all");
+  const [selectedDate, setSelectedDate] = createSignal<string>("");
+
+  const groupedByTab = createMemo(() => {
+    const date = selectedDate();
+    const buckets: Record<string, AttendanceRecord[]> = {
+      all: [],
+      "0": [],
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+    };
+
+    for (const r of records()) {
+      if (date && r.attendance_date !== date) continue;
+      buckets.all.push(r);
+      const dow = getDayOfWeekFromDateStr(r.attendance_date);
+      if (dow >= 0 && dow <= 6) {
+        buckets[String(dow)].push(r);
+      }
+    }
+
+    return buckets;
+  });
+
+  const tabCounts = createMemo(() => {
+    const buckets = groupedByTab();
+    const counts: Record<string, number> = {};
+    for (const key of Object.keys(buckets)) {
+      counts[key] = buckets[key].length;
+    }
+    return counts;
+  });
+
+  const visibleRecords = createMemo(() => groupedByTab()[activeDayTab()] ?? []);
 
   const refreshLocation = () => {
     if (!navigator.geolocation) {
@@ -499,13 +554,123 @@ const AttendancePage: Component = () => {
         onCancel={() => setDeletingId(null)}
       />
 
-      <DataTable
-        rows={records()}
-        columns={columns()}
-        isLoading={isLoading()}
-        emptyMessage="No attendance records found."
-        itemsPerPage={10}
-      />
+      <div>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "flex-end",
+            gap: "12px",
+            "flex-wrap": "wrap",
+            "border-bottom": "3px solid var(--green-800)",
+          }}
+        >
+          <div style={{ display: "flex", gap: "4px", "flex-wrap": "wrap" }}>
+            <For each={DAY_TABS}>
+              {(tab) => {
+                const isSelected = () => activeDayTab() === tab.key;
+                return (
+                  <button
+                    type="button"
+                    style={{
+                      display: "inline-flex",
+                      "align-items": "center",
+                      gap: "6px",
+                      padding: "9px 14px",
+                      border: "none",
+                      "border-top-left-radius": "6px",
+                      "border-top-right-radius": "6px",
+                      background: isSelected() ? "var(--green-800)" : "var(--gray-200)",
+                      color: isSelected() ? "#fff" : "var(--gray-700)",
+                      "font-size": "13px",
+                      "font-weight": "600",
+                      "font-family": "inherit",
+                      cursor: "pointer",
+                      transition: "background 0.15s, color 0.15s",
+                    }}
+                    onClick={() => setActiveDayTab(tab.key)}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      style={{
+                        padding: "1px 6px",
+                        "border-radius": "999px",
+                        "font-size": "11px",
+                        background: isSelected()
+                          ? "rgba(255,255,255,0.22)"
+                          : "rgba(255,255,255,0.7)",
+                        color: isSelected() ? "#fff" : "var(--gray-700)",
+                      }}
+                    >
+                      {tabCounts()[tab.key] ?? 0}
+                    </span>
+                  </button>
+                );
+              }}
+            </For>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              "align-items": "center",
+              gap: "8px",
+              "padding-bottom": "6px",
+              "flex-wrap": "wrap",
+            }}
+          >
+            <input
+              type="date"
+              value={selectedDate()}
+              onChange={(e) => setSelectedDate(e.currentTarget.value)}
+              aria-label="Filter by date"
+              style={{
+                height: "32px",
+                padding: "0 10px",
+                border: "1px solid var(--gray-200)",
+                "border-radius": "var(--radius-sm)",
+                background: "#fff",
+                color: "var(--gray-900)",
+                "font-size": "12.5px",
+                "font-family": "inherit",
+              }}
+            />
+            <Show when={today()?.today_date}>
+              {(todayDate) => (
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  style={{ padding: "5px 10px", "font-size": "12px" }}
+                  onClick={() => {
+                    setSelectedDate(todayDate());
+                    setActiveDayTab("all");
+                  }}
+                >
+                  Hari Ini
+                </button>
+              )}
+            </Show>
+            <Show when={selectedDate()}>
+              <button
+                type="button"
+                class="btn-secondary"
+                style={{ padding: "5px 10px", "font-size": "12px" }}
+                onClick={() => setSelectedDate("")}
+              >
+                Reset
+              </button>
+            </Show>
+          </div>
+        </div>
+
+        <DataTable
+          rows={visibleRecords()}
+          columns={columns()}
+          isLoading={isLoading()}
+          emptyMessage="No attendance records found."
+          itemsPerPage={10}
+        />
+      </div>
     </div>
   );
 };

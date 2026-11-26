@@ -69,6 +69,8 @@ const Sidebar: Component<SidebarProps> = (props) => {
             >
               <A
                 href={nodeProps.item.path}
+                activeClass=""
+                inactiveClass=""
                 class={isCurrent() ? "active" : ""}
                 style={{ "padding-left": paddingLeft() }}
                 onClick={() => props.setSidebarOpen(false)}

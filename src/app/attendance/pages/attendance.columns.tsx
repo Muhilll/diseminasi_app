@@ -29,6 +29,14 @@ const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }>
   legacy: { label: "Legacy", bg: "#f3f4f6", color: "#4b5563" },
 };
 
+function getThumbnailUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  const marker = "/image/upload/";
+  const idx = url.indexOf(marker);
+  if (idx === -1 || url.includes("/image/upload/w_")) return url;
+  return `${url.slice(0, idx + marker.length)}w_160,h_120,c_fill,q_auto,f_auto/${url.slice(idx + marker.length)}`;
+}
+
 function formatTime(value: string | null) {
   if (!value) return "-";
   const d = new Date(value);
@@ -79,7 +87,12 @@ export const createAttendanceColumns = (params: {
       <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
         <div class="table-image-thumb">
           {row.check_in_image ? (
-            <img src={row.check_in_image} alt="Check-In" />
+            <img
+              src={getThumbnailUrl(row.check_in_image)}
+              alt="Check-In"
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <span>-</span>
           )}
@@ -102,7 +115,12 @@ export const createAttendanceColumns = (params: {
       <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
         {row.check_out_image ? (
           <div class="table-image-thumb">
-            <img src={row.check_out_image} alt="Check-Out" />
+            <img
+              src={getThumbnailUrl(row.check_out_image)}
+              alt="Check-Out"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
         ) : null}
         <div>
