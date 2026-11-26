@@ -1,4 +1,5 @@
 import { Component, For, Show, createMemo, createSignal, onMount } from "solid-js";
+import ConfirmModal from "../../../components/ui/ConfirmModal";
 import DataTable, { type DataTableColumn } from "../../../components/ui/DataTable";
 import Modal from "../../../components/ui/Modal";
 import PageHeader from "../../../components/ui/PageHeader";
@@ -60,6 +61,17 @@ const SchedulePage: Component = () => {
   const [draftDays, setDraftDays] = createSignal<ScheduleDay[]>([]);
   const [isSaving, setIsSaving] = createSignal(false);
 
+  const [addingDay, setAddingDay] = createSignal<{ day: number; full: string } | null>(
+    null,
+  );
+  const [selectedAddUserId, setSelectedAddUserId] = createSignal("");
+  const [removingTarget, setRemovingTarget] = createSignal<{
+    userId: number;
+    userName: string;
+    day: number;
+    dayName: string;
+  } | null>(null);
+
   const fetchSchedules = async () => {
     setIsLoading(true);
     setError(null);
@@ -115,6 +127,59 @@ const SchedulePage: Component = () => {
         item.day_of_week === day ? { ...item, is_active: !item.is_active } : item,
       ),
     );
+  };
+
+  const availableUsersForAddDay = createMemo(() => {
+    const target = addingDay();
+    if (!target) return [];
+    return rows().filter(
+      (u) => !u.schedules.find((s) => s.day_of_week === target.day)?.is_active,
+    );
+  });
+
+  const openAddModal = (day: number, full: string, e: MouseEvent) => {
+    e.stopPropagation();
+    setSelectedAddUserId("");
+    setAddingDay({ day, full });
+  };
+
+  const handleAddMember = async (e: Event) => {
+    e.preventDefault();
+    const target = addingDay();
+    const userId = Number(selectedAddUserId());
+    if (!target || !userId) return;
+
+    setIsSaving(true);
+    const res = await attendanceSchedulesAPI.updateByUserId(userId, [
+      { day_of_week: target.day, is_active: true },
+    ]);
+    if (res.success) {
+      setAddingDay(null);
+      setOpenDays((prev) => ({ ...prev, [target.day]: true }));
+      await fetchSchedules();
+      showToast("success", "Anggota ditambahkan ke jadwal");
+    } else {
+      showToast("error", res.error || "Gagal menambahkan anggota");
+    }
+    setIsSaving(false);
+  };
+
+  const handleConfirmRemove = async () => {
+    const target = removingTarget();
+    if (!target) return;
+
+    setIsSaving(true);
+    const res = await attendanceSchedulesAPI.updateByUserId(target.userId, [
+      { day_of_week: target.day, is_active: false },
+    ]);
+    if (res.success) {
+      setRemovingTarget(null);
+      await fetchSchedules();
+      showToast("success", `${target.userName} dihapus dari ${target.dayName}`);
+    } else {
+      showToast("error", res.error || "Gagal menghapus anggota");
+    }
+    setIsSaving(false);
   };
 
   const handleSave = async (e: Event) => {
@@ -286,6 +351,62 @@ const SchedulePage: Component = () => {
         </div>
       </Modal>
 
+      <Modal open={!!addingDay()} onClose={() => setAddingDay(null)}>
+        <div class="form-section">
+          <div class="form-section-header">
+            <h2>Tambah Anggota — {addingDay()?.full}</h2>
+            <button
+              type="button"
+              class="btn-secondary"
+              onClick={() => setAddingDay(null)}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleAddMember} class="user-form">
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="add_member_select">Pilih Anggota</label>
+              <select
+                id="add_member_select"
+                value={selectedAddUserId()}
+                onChange={(e) => setSelectedAddUserId(e.currentTarget.value)}
+                required
+                disabled={isSaving()}
+              >
+                <option value="">-- Pilih user --</option>
+                <For each={availableUsersForAddDay()}>
+                  {(u) => (
+                    <option value={String(u.user_id)}>
+                      {u.user_name} ({u.user_email})
+                    </option>
+                  )}
+                </For>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSaving() || !selectedAddUserId()}
+            >
+              {isSaving() ? "Menyimpan..." : "Tambahkan"}
+            </button>
+          </form>
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        open={!!removingTarget()}
+        title="Hapus dari Jadwal"
+        message={`Hapus ${removingTarget()?.userName || ""} dari jadwal ${removingTarget()?.dayName || ""}?`}
+        confirmLabel={isSaving() ? "Menghapus..." : "Hapus"}
+        confirmLoading={isSaving()}
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setRemovingTarget(null)}
+      />
+
       <Show when={viewMode() === "by-day"}>
         <div
           class="form-section"
@@ -375,9 +496,16 @@ const SchedulePage: Component = () => {
                 const isOpen = () => !!openDays()[group.day];
                 return (
                   <div class="app-table-card">
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabindex="0"
                       onClick={() => toggleDayAccordion(group.day)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleDayAccordion(group.day);
+                        }
+                      }}
                       style={{
                         width: "100%",
                         display: "flex",
@@ -385,7 +513,6 @@ const SchedulePage: Component = () => {
                         "justify-content": "space-between",
                         padding: "16px 20px",
                         background: isOpen() ? "var(--gray-50)" : "#fff",
-                        border: "none",
                         cursor: "pointer",
                         "text-align": "left",
                         "font-family": "inherit",
@@ -397,19 +524,31 @@ const SchedulePage: Component = () => {
                           {group.full}
                         </strong>
                       </div>
-                      <span
-                        style={{
-                          padding: "3px 10px",
-                          "border-radius": "999px",
-                          "font-size": "12px",
-                          "font-weight": "600",
-                          background: "var(--green-100)",
-                          color: "var(--green-800)",
-                        }}
-                      >
-                        {group.members.length} anggota
-                      </span>
-                    </button>
+                      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
+                        <span
+                          style={{
+                            padding: "3px 10px",
+                            "border-radius": "999px",
+                            "font-size": "12px",
+                            "font-weight": "600",
+                            background: "var(--green-100)",
+                            color: "var(--green-800)",
+                          }}
+                        >
+                          {group.members.length} anggota
+                        </span>
+                        <Show when={permissions.canUpdate()}>
+                          <button
+                            type="button"
+                            class="btn-create"
+                            style={{ padding: "5px 12px", "font-size": "12.5px" }}
+                            onClick={(e) => openAddModal(group.day, group.full, e)}
+                          >
+                            + Tambah
+                          </button>
+                        </Show>
+                      </div>
+                    </div>
 
                     <Show when={isOpen()}>
                       <div
@@ -476,15 +615,19 @@ const SchedulePage: Component = () => {
                                   <Show when={permissions.canUpdate()}>
                                     <button
                                       type="button"
-                                      class="btn-secondary"
-                                      style={{
-                                        padding: "5px 10px",
-                                        "font-size": "12px",
-                                        "flex-shrink": "0",
-                                      }}
-                                      onClick={() => openEdit(member)}
+                                      class="btn-icon btn-delete"
+                                      title="Hapus dari hari ini"
+                                      style={{ width: "auto", padding: "5px 10px", "font-size": "12px", "flex-shrink": "0" }}
+                                      onClick={() =>
+                                        setRemovingTarget({
+                                          userId: member.user_id,
+                                          userName: member.user_name,
+                                          day: group.day,
+                                          dayName: group.full,
+                                        })
+                                      }
                                     >
-                                      Edit
+                                      Hapus
                                     </button>
                                   </Show>
                                 </div>
