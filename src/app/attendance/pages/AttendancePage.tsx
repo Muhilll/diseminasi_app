@@ -543,105 +543,123 @@ const AttendancePage: Component = () => {
         onCancel={() => setDeletingId(null)}
       />
 
-      <div
-        class="form-section"
-        style={{
-          padding: "14px 18px",
-          "margin-bottom": "16px",
-          display: "flex",
-          "justify-content": "space-between",
-          "align-items": "center",
-          gap: "12px",
-          "flex-wrap": "wrap",
-        }}
-      >
-        <div style={{ display: "flex", gap: "6px", "flex-wrap": "wrap" }}>
-          <For each={DAY_TABS}>
-            {(tab) => {
-              const isSelected = () => activeDayTab() === tab.key;
-              return (
+      <div>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "flex-end",
+            gap: "12px",
+            "flex-wrap": "wrap",
+            "border-bottom": "3px solid var(--green-800)",
+          }}
+        >
+          <div style={{ display: "flex", gap: "4px", "flex-wrap": "wrap" }}>
+            <For each={DAY_TABS}>
+              {(tab) => {
+                const isSelected = () => activeDayTab() === tab.key;
+                return (
+                  <button
+                    type="button"
+                    style={{
+                      display: "inline-flex",
+                      "align-items": "center",
+                      gap: "6px",
+                      padding: "9px 14px",
+                      border: "none",
+                      "border-top-left-radius": "6px",
+                      "border-top-right-radius": "6px",
+                      background: isSelected() ? "var(--green-800)" : "var(--gray-200)",
+                      color: isSelected() ? "#fff" : "var(--gray-700)",
+                      "font-size": "13px",
+                      "font-weight": "600",
+                      "font-family": "inherit",
+                      cursor: "pointer",
+                      transition: "background 0.15s, color 0.15s",
+                    }}
+                    onClick={() => setActiveDayTab(tab.key)}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      style={{
+                        padding: "1px 6px",
+                        "border-radius": "999px",
+                        "font-size": "11px",
+                        background: isSelected()
+                          ? "rgba(255,255,255,0.22)"
+                          : "rgba(255,255,255,0.7)",
+                        color: isSelected() ? "#fff" : "var(--gray-700)",
+                      }}
+                    >
+                      {tabCounts()[tab.key] ?? 0}
+                    </span>
+                  </button>
+                );
+              }}
+            </For>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              "align-items": "center",
+              gap: "8px",
+              "padding-bottom": "6px",
+              "flex-wrap": "wrap",
+            }}
+          >
+            <input
+              type="date"
+              value={selectedDate()}
+              onChange={(e) => setSelectedDate(e.currentTarget.value)}
+              aria-label="Filter by date"
+              style={{
+                height: "32px",
+                padding: "0 10px",
+                border: "1px solid var(--gray-200)",
+                "border-radius": "var(--radius-sm)",
+                background: "#fff",
+                color: "var(--gray-900)",
+                "font-size": "12.5px",
+                "font-family": "inherit",
+              }}
+            />
+            <Show when={today()?.today_date}>
+              {(todayDate) => (
                 <button
                   type="button"
-                  class={isSelected() ? "btn-create" : "btn-secondary"}
-                  style={{
-                    padding: "6px 12px",
-                    "font-size": "13px",
-                    gap: "6px",
+                  class="btn-secondary"
+                  style={{ padding: "5px 10px", "font-size": "12px" }}
+                  onClick={() => {
+                    setSelectedDate(todayDate());
+                    setActiveDayTab("all");
                   }}
-                  onClick={() => setActiveDayTab(tab.key)}
                 >
-                  <span>{tab.label}</span>
-                  <span
-                    style={{
-                      padding: "1px 7px",
-                      "border-radius": "999px",
-                      "font-size": "11px",
-                      background: isSelected()
-                        ? "rgba(255,255,255,0.22)"
-                        : "var(--gray-100)",
-                      color: isSelected() ? "#fff" : "var(--gray-700)",
-                    }}
-                  >
-                    {tabCounts()[tab.key] ?? 0}
-                  </span>
+                  Hari Ini
                 </button>
-              );
-            }}
-          </For>
-        </div>
-
-        <div style={{ display: "flex", "align-items": "center", gap: "8px", "flex-wrap": "wrap" }}>
-          <input
-            type="date"
-            value={selectedDate()}
-            onChange={(e) => setSelectedDate(e.currentTarget.value)}
-            aria-label="Filter by date"
-            style={{
-              height: "34px",
-              padding: "0 10px",
-              border: "1px solid var(--gray-200)",
-              "border-radius": "var(--radius-sm)",
-              background: "#fff",
-              color: "var(--gray-900)",
-              "font-size": "13px",
-              "font-family": "inherit",
-            }}
-          />
-          <Show when={today()?.today_date}>
-            {(todayDate) => (
+              )}
+            </Show>
+            <Show when={selectedDate()}>
               <button
                 type="button"
                 class="btn-secondary"
-                style={{ padding: "6px 10px", "font-size": "12.5px" }}
-                onClick={() => {
-                  setSelectedDate(todayDate());
-                  setActiveDayTab("all");
-                }}
+                style={{ padding: "5px 10px", "font-size": "12px" }}
+                onClick={() => setSelectedDate("")}
               >
-                Hari Ini
+                Reset
               </button>
-            )}
-          </Show>
-          <Show when={selectedDate()}>
-            <button
-              type="button"
-              class="btn-secondary"
-              style={{ padding: "6px 10px", "font-size": "12.5px" }}
-              onClick={() => setSelectedDate("")}
-            >
-              Reset
-            </button>
-          </Show>
+            </Show>
+          </div>
         </div>
-      </div>
 
-      <DataTable
-        rows={visibleRecords()}
-        columns={columns()}
-        isLoading={isLoading()}
-        emptyMessage="No attendance records found."
-        itemsPerPage={10}
-      />
+        <DataTable
+          rows={visibleRecords()}
+          columns={columns()}
+          isLoading={isLoading()}
+          emptyMessage="No attendance records found."
+          itemsPerPage={10}
+        />
+      </div>
     </div>
   );
 };
