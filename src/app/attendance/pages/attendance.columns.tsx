@@ -1,0 +1,138 @@
+import type { DataTableColumn } from "../../../components/ui/DataTable";
+import { formatDate } from "../../../utils/helpers";
+import type { AttendanceRecord } from "../type/attendance";
+
+const IconTrash = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+);
+
+const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }> = {
+  on_time: { label: "On Time", bg: "#dcfce7", color: "#166534" },
+  late: { label: "Late", bg: "#fef3c7", color: "#92400e" },
+  late_checkout: { label: "Late Checkout", bg: "#fef3c7", color: "#92400e" },
+  missed_checkout: { label: "Missed Checkout", bg: "#fee2e2", color: "#991b1b" },
+  legacy: { label: "Legacy", bg: "#f3f4f6", color: "#4b5563" },
+};
+
+function formatTime(value: string | null) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+}
+
+function StatusBadge(props: { status: string | null }) {
+  if (!props.status) return <span style={{ color: "var(--gray-400)" }}>-</span>;
+  const cfg = STATUS_STYLE[props.status] ?? {
+    label: props.status,
+    bg: "#f3f4f6",
+    color: "#374151",
+  };
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        "border-radius": "999px",
+        "font-size": "11px",
+        "font-weight": "600",
+        background: cfg.bg,
+        color: cfg.color,
+      }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
+export const createAttendanceColumns = (params: {
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+}): DataTableColumn<AttendanceRecord>[] => [
+  { header: "No", cell: (_, index) => <>{index + 1}</> },
+  {
+    header: "Date",
+    cell: (row) => <>{formatDate(row.attendance_date, "id-ID")}</>,
+  },
+  {
+    header: "User",
+    cell: (row) => <>{row.user?.name || row.user_id}</>,
+  },
+  {
+    header: "Check-In",
+    cell: (row) => (
+      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
+        <div class="table-image-thumb">
+          {row.check_in_image ? (
+            <img src={row.check_in_image} alt="Check-In" />
+          ) : (
+            <span>-</span>
+          )}
+        </div>
+        <div>
+          <div style={{ "font-weight": "600" }}>{formatTime(row.check_in_time)}</div>
+          <StatusBadge status={row.check_in_status} />
+          {row.check_in_note && (
+            <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
+              {row.check_in_note}
+            </div>
+          )}
+        </div>
+      </div>
+    ),
+  },
+  {
+    header: "Check-Out",
+    cell: (row) => (
+      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
+        {row.check_out_image ? (
+          <div class="table-image-thumb">
+            <img src={row.check_out_image} alt="Check-Out" />
+          </div>
+        ) : null}
+        <div>
+          <div style={{ "font-weight": "600" }}>{formatTime(row.check_out_time)}</div>
+          <StatusBadge status={row.check_out_status} />
+          {row.check_out_note && (
+            <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
+              {row.check_out_note}
+            </div>
+          )}
+        </div>
+      </div>
+    ),
+  },
+  {
+    header: "Actions",
+    headerStyle: { "text-align": "right" },
+    cellClass: "td-actions",
+    cell: (row) => (
+      <div class="action-btns">
+        {params.canDelete && (
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            onClick={() => params.onDelete(String(row.id))}
+          >
+            <IconTrash />
+          </button>
+        )}
+      </div>
+    ),
+  },
+];
