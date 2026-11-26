@@ -113,6 +113,26 @@ const AttendancePage: Component = () => {
     );
   });
 
+  const isInsideRadius = createMemo(() => {
+    const dist = distanceMeters();
+    const s = today()?.settings;
+    return dist !== null && !!s && dist <= s.radius_meters;
+  });
+
+  const checkInDisabledReason = createMemo(() => {
+    if (!today()?.schedule?.is_active) return "Tidak ada jadwal aktif hari ini";
+    if (!coords()) return "Lokasi GPS belum tersedia";
+    if (!isInsideRadius()) return "Anda berada di luar radius absensi";
+    return null;
+  });
+
+  const checkOutDisabledReason = createMemo(() => {
+    if (!hasOpenCheckIn()) return "Lakukan Absen Masuk terlebih dahulu";
+    if (!coords()) return "Lokasi GPS belum tersedia";
+    if (!isInsideRadius()) return "Anda berada di luar radius absensi";
+    return null;
+  });
+
   const openModal = (mode: "check-in" | "check-out") => {
     setPhotoFile(null);
     setNote("");
@@ -213,74 +233,75 @@ const AttendancePage: Component = () => {
         class="form-section"
         style={{
           "margin-bottom": "20px",
-          display: "flex",
-          "justify-content": "space-between",
-          "align-items": "center",
+          display: "grid",
           gap: "16px",
-          "flex-wrap": "wrap",
         }}
       >
-        <div style={{ display: "grid", gap: "6px" }}>
-          <div style={{ "font-size": "15px", "font-weight": "700" }}>
-            Today ({today()?.today_date || "-"}) —{" "}
-            <span
-              style={{
-                color: today()?.schedule?.is_active
-                  ? "var(--green-700)"
-                  : "var(--gray-500)",
-              }}
-            >
-              {today()?.schedule?.is_active ? "Scheduled Active" : "Off Schedule"}
-            </span>
-          </div>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "flex-start",
+            gap: "12px",
+            "flex-wrap": "wrap",
+          }}
+        >
+          <div style={{ display: "grid", gap: "6px" }}>
+            <div style={{ "font-size": "15px", "font-weight": "700" }}>
+              Today ({today()?.today_date || "-"}) —{" "}
+              <span
+                style={{
+                  color: today()?.schedule?.is_active
+                    ? "var(--green-700)"
+                    : "var(--red-600)",
+                }}
+              >
+                {today()?.schedule?.is_active ? "Jadwal Aktif" : "Tidak Ada Jadwal (Off)"}
+              </span>
+            </div>
 
-          <Show when={today()?.settings}>
-            {(s) => (
-              <div style={{ "font-size": "13px", color: "var(--gray-500)" }}>
-                Target: <strong>{s().location_name}</strong> (Radius{" "}
-                {s().radius_meters}m) | Masuk &le; {s().check_in_deadline} | Keluar
-                &le; {s().check_out_deadline}
-              </div>
-            )}
-          </Show>
-
-          <div style={{ "font-size": "13px", color: "var(--gray-700)" }}>
-            <Show
-              when={coords()}
-              fallback={
-                <span style={{ color: "var(--red-600)" }}>
-                  {geoError() || (isLocating() ? "Acquiring GPS..." : "Location unavailable")}
-                </span>
-              }
-            >
-              {(c) => (
-                <>
-                  GPS: {c().lat.toFixed(5)}, {c().lng.toFixed(5)}
-                  <Show when={distanceMeters() !== null && today()?.settings}>
-                    {" "}
-                    —{" "}
-                    <strong
-                      style={{
-                        color:
-                          distanceMeters()! <= today()!.settings!.radius_meters
-                            ? "var(--green-700)"
-                            : "var(--red-600)",
-                      }}
-                    >
-                      {distanceMeters()}m (
-                      {distanceMeters()! <= today()!.settings!.radius_meters
-                        ? "Inside Radius"
-                        : "Outside Radius"}
-                      )
-                    </strong>
-                  </Show>
-                </>
+            <Show when={today()?.settings}>
+              {(s) => (
+                <div style={{ "font-size": "13px", color: "var(--gray-500)" }}>
+                  Target: <strong>{s().location_name}</strong> (Radius{" "}
+                  {s().radius_meters}m) | Batas Masuk &le; {s().check_in_deadline} |
+                  Batas Keluar &le; {s().check_out_deadline}
+                </div>
               )}
             </Show>
-          </div>
-        </div>
 
-        <div style={{ display: "flex", gap: "10px", "flex-wrap": "wrap" }}>
+            <div style={{ "font-size": "13px", color: "var(--gray-700)" }}>
+              <Show
+                when={coords()}
+                fallback={
+                  <span style={{ color: "var(--red-600)" }}>
+                    {geoError() || (isLocating() ? "Acquiring GPS..." : "Location unavailable")}
+                  </span>
+                }
+              >
+                {(c) => (
+                  <>
+                    GPS: {c().lat.toFixed(5)}, {c().lng.toFixed(5)}
+                    <Show when={distanceMeters() !== null && today()?.settings}>
+                      {" "}
+                      —{" "}
+                      <strong
+                        style={{
+                          color: isInsideRadius()
+                            ? "var(--green-700)"
+                            : "var(--red-600)",
+                        }}
+                      >
+                        {distanceMeters()}m (
+                        {isInsideRadius() ? "Inside Radius" : "Outside Radius"})
+                      </strong>
+                    </Show>
+                  </>
+                )}
+              </Show>
+            </div>
+          </div>
+
           <button
             type="button"
             class="btn-secondary"
@@ -289,42 +310,114 @@ const AttendancePage: Component = () => {
           >
             {isLocating() ? "Locating..." : "Refresh GPS"}
           </button>
+        </div>
 
-          <Show when={permissions.canCreate() && !hasOpenCheckIn() && !hasCompletedToday()}>
-            <button
-              type="button"
-              class="btn-create"
-              disabled={!today()?.schedule?.is_active}
-              onClick={() => openModal("check-in")}
+        <div
+          style={{
+            display: "grid",
+            "grid-template-columns": "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              padding: "14px 16px",
+              border: "1px solid var(--gray-200)",
+              "border-radius": "10px",
+              background: "var(--gray-50)",
+              display: "grid",
+              gap: "8px",
+            }}
+          >
+            <div style={{ "font-weight": "700", "font-size": "14px" }}>
+              1. Absen Masuk (Check-In)
+            </div>
+            <Show
+              when={hasOpenCheckIn() || hasCompletedToday()}
+              fallback={
+                <>
+                  <Show when={permissions.canCreate()}>
+                    <button
+                      type="button"
+                      class="btn-create"
+                      style={{
+                        width: "100%",
+                        "justify-content": "center",
+                        ...(checkInDisabledReason()
+                          ? { opacity: "0.45", cursor: "not-allowed" }
+                          : {}),
+                      }}
+                      disabled={!!checkInDisabledReason()}
+                      onClick={() => openModal("check-in")}
+                    >
+                      Absen Masuk (Check-In)
+                    </button>
+                  </Show>
+                  <Show when={checkInDisabledReason()}>
+                    <small style={{ color: "var(--gray-500)", "font-size": "12px" }}>
+                      {checkInDisabledReason()}
+                    </small>
+                  </Show>
+                </>
+              }
             >
-              Absen Masuk (Check-In)
-            </button>
-          </Show>
+              <div style={{ "font-size": "13px", color: "var(--green-700)", "font-weight": "600" }}>
+                Sudah Absen Masuk ({today()?.attendance?.attendance_date}) —{" "}
+                {today()?.attendance?.check_in_status === "late" ? "Late" : "On Time"}
+              </div>
+            </Show>
+          </div>
 
-          <Show when={permissions.canUpdate() && hasOpenCheckIn()}>
-            <button
-              type="button"
-              class="btn-create"
-              onClick={() => openModal("check-out")}
+          <div
+            style={{
+              padding: "14px 16px",
+              border: "1px solid var(--gray-200)",
+              "border-radius": "10px",
+              background: "var(--gray-50)",
+              display: "grid",
+              gap: "8px",
+            }}
+          >
+            <div style={{ "font-weight": "700", "font-size": "14px" }}>
+              2. Absen Keluar (Check-Out)
+            </div>
+            <Show
+              when={hasCompletedToday()}
+              fallback={
+                <>
+                  <Show when={permissions.canUpdate()}>
+                    <button
+                      type="button"
+                      class="btn-create"
+                      style={{
+                        width: "100%",
+                        "justify-content": "center",
+                        ...(checkOutDisabledReason()
+                          ? { opacity: "0.45", cursor: "not-allowed" }
+                          : {}),
+                      }}
+                      disabled={!!checkOutDisabledReason()}
+                      onClick={() => openModal("check-out")}
+                    >
+                      Absen Keluar (Check-Out)
+                    </button>
+                  </Show>
+                  <Show when={checkOutDisabledReason()}>
+                    <small style={{ color: "var(--gray-500)", "font-size": "12px" }}>
+                      {checkOutDisabledReason()}
+                    </small>
+                  </Show>
+                </>
+              }
             >
-              Absen Keluar (Check-Out)
-            </button>
-          </Show>
-
-          <Show when={hasCompletedToday()}>
-            <span
-              style={{
-                padding: "8px 14px",
-                "border-radius": "8px",
-                background: "var(--green-100)",
-                color: "var(--green-800)",
-                "font-weight": "600",
-                "font-size": "13px",
-              }}
-            >
-              Completed Today
-            </span>
-          </Show>
+              <div style={{ "font-size": "13px", color: "var(--green-700)", "font-weight": "600" }}>
+                Sudah Absen Keluar —{" "}
+                {today()?.attendance?.check_out_status === "late_checkout"
+                  ? "Late Checkout"
+                  : "On Time"}
+              </div>
+            </Show>
+          </div>
         </div>
       </div>
 
