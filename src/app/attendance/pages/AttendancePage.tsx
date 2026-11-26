@@ -346,7 +346,7 @@ const AttendancePage: Component = () => {
           </div>
 
           <form onSubmit={handleSubmit} class="user-form">
-            <div class="form-group">
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
               <label for="attendance_photo">Photo Evidence</label>
               <div class="file-input-field">
                 <label for="attendance_photo" class="file-input-button">
@@ -367,7 +367,7 @@ const AttendancePage: Component = () => {
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
               <label for="attendance_note">Note (Optional)</label>
               <textarea
                 id="attendance_note"
@@ -380,7 +380,12 @@ const AttendancePage: Component = () => {
               />
             </div>
 
-            <button type="submit" class="btn-submit" disabled={isSubmitting()}>
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSubmitting()}
+            >
               {isSubmitting()
                 ? "Submitting..."
                 : modalMode() === "check-in"

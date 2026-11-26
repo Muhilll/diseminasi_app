@@ -99,7 +99,7 @@ const SettingsPage: Component = () => {
         <div class="error-message">{error()}</div>
       </Show>
 
-      <div class="form-section" style={{ "max-width": "680px" }}>
+      <div class="form-section">
         <form onSubmit={handleSubmit} class="user-form">
           <div class="form-group">
             <label for="location_name">Location Name</label>
@@ -113,52 +113,31 @@ const SettingsPage: Component = () => {
             />
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              "grid-template-columns": "1fr 1fr",
-              gap: "14px",
-            }}
-          >
-            <div class="form-group">
-              <label for="latitude">Latitude</label>
-              <input
-                id="latitude"
-                type="number"
-                step="any"
-                value={latitude()}
-                onInput={(e) => setLatitude(e.currentTarget.value)}
-                required
-                disabled={isReadOnly()}
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="longitude">Longitude</label>
-              <input
-                id="longitude"
-                type="number"
-                step="any"
-                value={longitude()}
-                onInput={(e) => setLongitude(e.currentTarget.value)}
-                required
-                disabled={isReadOnly()}
-              />
-            </div>
+          <div class="form-group">
+            <label for="latitude">Latitude</label>
+            <input
+              id="latitude"
+              type="number"
+              step="any"
+              value={latitude()}
+              onInput={(e) => setLatitude(e.currentTarget.value)}
+              required
+              disabled={isReadOnly()}
+            />
           </div>
 
-          <Show when={permissions.canUpdate()}>
-            <div>
-              <button
-                type="button"
-                class="btn-secondary"
-                onClick={handleUseCurrentLocation}
-                disabled={isLoading() || isLocating()}
-              >
-                {isLocating() ? "Locating..." : "Use Current Location"}
-              </button>
-            </div>
-          </Show>
+          <div class="form-group">
+            <label for="longitude">Longitude</label>
+            <input
+              id="longitude"
+              type="number"
+              step="any"
+              value={longitude()}
+              onInput={(e) => setLongitude(e.currentTarget.value)}
+              required
+              disabled={isReadOnly()}
+            />
+          </div>
 
           <div class="form-group">
             <label for="radius_meters">Allowed Radius (meters)</label>
@@ -174,46 +153,62 @@ const SettingsPage: Component = () => {
             />
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              "grid-template-columns": "1fr 1fr",
-              gap: "14px",
-            }}
-          >
-            <div class="form-group">
-              <label for="check_in_deadline">Batas Absen Masuk</label>
-              <input
-                id="check_in_deadline"
-                type="time"
-                value={checkInDeadline()}
-                onInput={(e) => setCheckInDeadline(e.currentTarget.value)}
-                required
-                disabled={isReadOnly()}
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="check_out_deadline">Batas Absen Keluar</label>
-              <input
-                id="check_out_deadline"
-                type="time"
-                value={checkOutDeadline()}
-                onInput={(e) => setCheckOutDeadline(e.currentTarget.value)}
-                required
-                disabled={isReadOnly()}
-              />
-            </div>
+          <div class="form-group">
+            <label for="check_in_deadline">Batas Absen Masuk</label>
+            <input
+              id="check_in_deadline"
+              type="time"
+              value={checkInDeadline()}
+              onInput={(e) => setCheckInDeadline(e.currentTarget.value)}
+              required
+              disabled={isReadOnly()}
+            />
           </div>
 
-          <small class="form-helper-text">
+          <div class="form-group">
+            <label for="check_out_deadline">Batas Absen Keluar</label>
+            <input
+              id="check_out_deadline"
+              type="time"
+              value={checkOutDeadline()}
+              onInput={(e) => setCheckOutDeadline(e.currentTarget.value)}
+              required
+              disabled={isReadOnly()}
+            />
+          </div>
+
+          <small class="form-helper-text" style={{ "grid-column": "1 / -1" }}>
             Jika batas absen keluar lebih kecil/sama dengan batas absen masuk (mis. masuk 21:00, keluar 09:00 atau 17:00), sistem otomatis menghitungnya sebagai shift lintas hari (esok harinya).
           </small>
 
           <Show when={permissions.canUpdate()}>
-            <button type="submit" class="btn-submit" disabled={isLoading()}>
-              {isLoading() ? "Saving..." : "Save Settings"}
-            </button>
+            <div
+              style={{
+                "grid-column": "1 / -1",
+                display: "flex",
+                gap: "12px",
+                "flex-wrap": "wrap",
+                "align-items": "center",
+              }}
+            >
+              <button
+                type="button"
+                class="btn-secondary"
+                onClick={handleUseCurrentLocation}
+                disabled={isLoading() || isLocating()}
+              >
+                {isLocating() ? "Locating..." : "Use Current Location"}
+              </button>
+
+              <button
+                type="submit"
+                class="btn-submit"
+                style={{ width: "auto" }}
+                disabled={isLoading()}
+              >
+                {isLoading() ? "Saving..." : "Save Settings"}
+              </button>
+            </div>
           </Show>
         </form>
       </div>

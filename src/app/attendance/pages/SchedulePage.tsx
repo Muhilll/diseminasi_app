@@ -170,7 +170,7 @@ const SchedulePage: Component = () => {
           </div>
 
           <form onSubmit={handleSave} class="user-form">
-            <div style={{ display: "grid", gap: "10px" }}>
+            <div style={{ "grid-column": "1 / -1", display: "grid", gap: "10px" }}>
               <For each={DAY_NAMES}>
                 {({ day, full }) => {
                   const checked = () =>
@@ -200,7 +200,12 @@ const SchedulePage: Component = () => {
               </For>
             </div>
 
-            <button type="submit" class="btn-submit" disabled={isSaving()}>
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSaving()}
+            >
               {isSaving() ? "Saving..." : "Save Schedule"}
             </button>
           </form>
