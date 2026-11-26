@@ -466,7 +466,7 @@ const SchedulePage: Component = () => {
                         "flex-wrap": "wrap",
                       }}
                     >
-                      <div style={{ position: "relative", width: "min(100%, 260px)" }}>
+                      <div style={{ position: "relative", width: "240px", "max-width": "100%", "flex-shrink": "0" }}>
                         <span
                           aria-hidden="true"
                           style={{
@@ -500,7 +500,7 @@ const SchedulePage: Component = () => {
                           onInput={(e) => setDaySearch(e.currentTarget.value)}
                           style={{
                             width: "100%",
-                            height: "34px",
+                            height: "36px",
                             padding: "0 10px 0 32px",
                             border: "1px solid var(--gray-200)",
                             "border-radius": "var(--radius-sm)",
@@ -517,7 +517,12 @@ const SchedulePage: Component = () => {
                         <button
                           type="button"
                           class="btn-create"
-                          style={{ padding: "6px 12px", "font-size": "12.5px" }}
+                          style={{
+                            height: "36px",
+                            padding: "0 14px",
+                            "font-size": "12.5px",
+                            "flex-shrink": "0",
+                          }}
                           onClick={(e) => openAddModal(group().day, group().full, e)}
                         >
                           + Tambah
