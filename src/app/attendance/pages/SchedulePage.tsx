@@ -10,33 +10,14 @@ import { attendanceSchedulesAPI } from "../service/attendance.api";
 import type { ScheduleDay, UserSchedule } from "../type/attendance";
 
 const DAY_NAMES = [
-  { day: 0, short: "Min", full: "Minggu — Malam Senin" },
-  { day: 1, short: "Sen", full: "Senin — Malam Selasa" },
-  { day: 2, short: "Sel", full: "Selasa — Malam Rabu" },
-  { day: 3, short: "Rab", full: "Rabu — Malam Kamis" },
-  { day: 4, short: "Kam", full: "Kamis — Malam Jumat" },
-  { day: 5, short: "Jum", full: "Jumat — Malam Sabtu" },
-  { day: 6, short: "Sab", full: "Sabtu — Bersih Bersama" },
+  { day: 0, short: "Min", tab: "Minggu", full: "Minggu — Malam Senin" },
+  { day: 1, short: "Sen", tab: "Senin", full: "Senin — Malam Selasa" },
+  { day: 2, short: "Sel", tab: "Selasa", full: "Selasa — Malam Rabu" },
+  { day: 3, short: "Rab", tab: "Rabu", full: "Rabu — Malam Kamis" },
+  { day: 4, short: "Kam", tab: "Kamis", full: "Kamis — Malam Jumat" },
+  { day: 5, short: "Jum", tab: "Jumat", full: "Jumat — Malam Sabtu" },
+  { day: 6, short: "Sab", tab: "Sabtu", full: "Sabtu — Bersih Bersama" },
 ];
-
-const IconChevron = (props: { open: boolean }) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    style={{
-      transform: props.open ? "rotate(90deg)" : "rotate(0deg)",
-      transition: "transform 0.15s ease",
-    }}
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 const SchedulePage: Component = () => {
   const permissions = usePagePermissions();
@@ -46,15 +27,7 @@ const SchedulePage: Component = () => {
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [viewMode, setViewMode] = createSignal<"by-day" | "by-user">("by-day");
-  const [openDays, setOpenDays] = createSignal<Record<number, boolean>>({
-    0: true,
-    1: true,
-    2: true,
-    3: true,
-    4: true,
-    5: true,
-    6: false,
-  });
+  const [activeDay, setActiveDay] = createSignal<number>(0);
   const [daySearch, setDaySearch] = createSignal("");
 
   const [editingUser, setEditingUser] = createSignal<UserSchedule | null>(null);
@@ -86,14 +59,6 @@ const SchedulePage: Component = () => {
 
   onMount(fetchSchedules);
 
-  const toggleDayAccordion = (day: number) => {
-    setOpenDays((prev) => ({ ...prev, [day]: !prev[day] }));
-  };
-
-  const setAllDaysOpen = (open: boolean) => {
-    setOpenDays({ 0: open, 1: open, 2: open, 3: open, 4: open, 5: open, 6: open });
-  };
-
   const groupedByDay = createMemo(() => {
     const query = daySearch().trim().toLowerCase();
     return DAY_NAMES.map((meta) => {
@@ -110,6 +75,10 @@ const SchedulePage: Component = () => {
       return { ...meta, members };
     });
   });
+
+  const activeDayGroup = createMemo(
+    () => groupedByDay().find((g) => g.day === activeDay()) ?? groupedByDay()[0],
+  );
 
   const openEdit = (user: UserSchedule) => {
     setEditingUser(user);
@@ -155,7 +124,7 @@ const SchedulePage: Component = () => {
     ]);
     if (res.success) {
       setAddingDay(null);
-      setOpenDays((prev) => ({ ...prev, [target.day]: true }));
+      setActiveDay(target.day);
       await fetchSchedules();
       showToast("success", "Anggota ditambahkan ke jadwal");
     } else {
@@ -408,239 +377,243 @@ const SchedulePage: Component = () => {
       />
 
       <Show when={viewMode() === "by-day"}>
-        <div
-          class="form-section"
-          style={{
-            padding: "14px 20px",
-            "margin-bottom": "16px",
-            display: "flex",
-            "justify-content": "space-between",
-            "align-items": "center",
-            gap: "12px",
-            "flex-wrap": "wrap",
-          }}
-        >
-          <div style={{ position: "relative", width: "min(100%, 320px)" }}>
-            <span
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "var(--gray-400)",
-                display: "flex",
-                "pointer-events": "none",
-              }}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
-            <input
-              type="search"
-              placeholder="Cari nama atau email anggota..."
-              value={daySearch()}
-              onInput={(e) => setDaySearch(e.currentTarget.value)}
-              style={{
-                width: "100%",
-                height: "38px",
-                padding: "0 12px 0 36px",
-                border: "1px solid var(--gray-200)",
-                "border-radius": "var(--radius-sm)",
-                background: "var(--gray-50)",
-                color: "var(--gray-900)",
-                "font-size": "13.5px",
-                "font-family": "inherit",
-                outline: "none",
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              type="button"
-              class="btn-secondary"
-              onClick={() => setAllDaysOpen(true)}
-            >
-              Buka Semua
-            </button>
-            <button
-              type="button"
-              class="btn-secondary"
-              onClick={() => setAllDaysOpen(false)}
-            >
-              Tutup Semua
-            </button>
-          </div>
-        </div>
-
         <Show when={isLoading()}>
           <div class="form-section">Loading schedules...</div>
         </Show>
 
         <Show when={!isLoading()}>
-          <div style={{ display: "grid", gap: "12px" }}>
-            <For each={groupedByDay()}>
-              {(group) => {
-                const isOpen = () => !!openDays()[group.day];
-                return (
-                  <div class="app-table-card">
-                    <div
-                      role="button"
-                      tabindex="0"
-                      onClick={() => toggleDayAccordion(group.day)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleDayAccordion(group.day);
-                        }
-                      }}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        "align-items": "center",
-                        "justify-content": "space-between",
-                        padding: "16px 20px",
-                        background: isOpen() ? "var(--gray-50)" : "#fff",
-                        cursor: "pointer",
-                        "text-align": "left",
-                        "font-family": "inherit",
-                      }}
-                    >
-                      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
-                        <IconChevron open={isOpen()} />
-                        <strong style={{ "font-size": "15px", color: "var(--gray-900)" }}>
-                          {group.full}
-                        </strong>
-                      </div>
-                      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
+          <div>
+            <div
+              style={{
+                display: "flex",
+                "justify-content": "space-between",
+                "align-items": "flex-end",
+                gap: "12px",
+                "flex-wrap": "wrap",
+                "border-bottom": "3px solid var(--green-800)",
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px", "flex-wrap": "wrap" }}>
+                <For each={groupedByDay()}>
+                  {(group) => {
+                    const isSelected = () => activeDay() === group.day;
+                    return (
+                      <button
+                        type="button"
+                        style={{
+                          display: "inline-flex",
+                          "align-items": "center",
+                          gap: "6px",
+                          padding: "9px 14px",
+                          border: "none",
+                          "border-top-left-radius": "6px",
+                          "border-top-right-radius": "6px",
+                          background: isSelected() ? "var(--green-800)" : "var(--gray-200)",
+                          color: isSelected() ? "#fff" : "var(--gray-700)",
+                          "font-size": "13px",
+                          "font-weight": "600",
+                          "font-family": "inherit",
+                          cursor: "pointer",
+                          transition: "background 0.15s, color 0.15s",
+                        }}
+                        onClick={() => setActiveDay(group.day)}
+                      >
+                        <span>{group.tab}</span>
                         <span
                           style={{
-                            padding: "3px 10px",
+                            padding: "1px 6px",
                             "border-radius": "999px",
-                            "font-size": "12px",
-                            "font-weight": "600",
-                            background: "var(--green-100)",
-                            color: "var(--green-800)",
+                            "font-size": "11px",
+                            background: isSelected()
+                              ? "rgba(255,255,255,0.22)"
+                              : "rgba(255,255,255,0.7)",
+                            color: isSelected() ? "#fff" : "var(--gray-700)",
                           }}
                         >
-                          {group.members.length} anggota
+                          {group.members.length}
                         </span>
-                        <Show when={permissions.canUpdate()}>
-                          <button
-                            type="button"
-                            class="btn-create"
-                            style={{ padding: "5px 12px", "font-size": "12.5px" }}
-                            onClick={(e) => openAddModal(group.day, group.full, e)}
-                          >
-                            + Tambah
-                          </button>
-                        </Show>
-                      </div>
-                    </div>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </div>
 
-                    <Show when={isOpen()}>
+            <Show when={activeDayGroup()}>
+              {(group) => (
+                <div class="app-table-card" style={{ "border-top-left-radius": "0" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      "align-items": "center",
+                      "justify-content": "space-between",
+                      gap: "12px",
+                      "flex-wrap": "wrap",
+                      padding: "16px 20px",
+                      "border-bottom": "1px solid var(--gray-100)",
+                      background: "var(--gray-50)",
+                    }}
+                  >
+                    <strong style={{ "font-size": "15px", color: "var(--gray-900)" }}>
+                      {group().full} ({group().members.length} anggota)
+                    </strong>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        "align-items": "center",
+                        gap: "10px",
+                        "flex-wrap": "wrap",
+                      }}
+                    >
+                      <div style={{ position: "relative", width: "min(100%, 260px)" }}>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            position: "absolute",
+                            left: "11px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "var(--gray-400)",
+                            display: "flex",
+                            "pointer-events": "none",
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          </svg>
+                        </span>
+                        <input
+                          type="search"
+                          placeholder="Cari anggota..."
+                          value={daySearch()}
+                          onInput={(e) => setDaySearch(e.currentTarget.value)}
+                          style={{
+                            width: "100%",
+                            height: "34px",
+                            padding: "0 10px 0 32px",
+                            border: "1px solid var(--gray-200)",
+                            "border-radius": "var(--radius-sm)",
+                            background: "#fff",
+                            color: "var(--gray-900)",
+                            "font-size": "13px",
+                            "font-family": "inherit",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+
+                      <Show when={permissions.canUpdate()}>
+                        <button
+                          type="button"
+                          class="btn-create"
+                          style={{ padding: "6px 12px", "font-size": "12.5px" }}
+                          onClick={(e) => openAddModal(group().day, group().full, e)}
+                        >
+                          + Tambah
+                        </button>
+                      </Show>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "18px 20px" }}>
+                    <Show
+                      when={group().members.length > 0}
+                      fallback={
+                        <div style={{ color: "var(--gray-400)", "font-size": "13px" }}>
+                          Tidak ada anggota terjadwal di hari ini.
+                        </div>
+                      }
+                    >
                       <div
                         style={{
-                          padding: "14px 20px 18px",
-                          "border-top": "1px solid var(--gray-100)",
+                          display: "grid",
+                          "grid-template-columns": "repeat(auto-fill, minmax(260px, 1fr))",
+                          gap: "10px",
                         }}
                       >
-                        <Show
-                          when={group.members.length > 0}
-                          fallback={
-                            <div style={{ color: "var(--gray-400)", "font-size": "13px" }}>
-                              Tidak ada anggota terjadwal di hari ini.
-                            </div>
-                          }
-                        >
-                          <div
-                            style={{
-                              display: "grid",
-                              "grid-template-columns": "repeat(auto-fill, minmax(260px, 1fr))",
-                              gap: "10px",
-                            }}
-                          >
-                            <For each={group.members}>
-                              {(member) => (
+                        <For each={group().members}>
+                          {(member) => (
+                            <div
+                              style={{
+                                display: "flex",
+                                "align-items": "center",
+                                "justify-content": "space-between",
+                                gap: "10px",
+                                padding: "10px 14px",
+                                border: "1px solid var(--gray-200)",
+                                "border-radius": "8px",
+                                background: "#fff",
+                              }}
+                            >
+                              <div style={{ "min-width": "0" }}>
                                 <div
                                   style={{
-                                    display: "flex",
-                                    "align-items": "center",
-                                    "justify-content": "space-between",
-                                    gap: "10px",
-                                    padding: "10px 14px",
-                                    border: "1px solid var(--gray-200)",
-                                    "border-radius": "8px",
-                                    background: "#fff",
+                                    "font-weight": "600",
+                                    "font-size": "13.5px",
+                                    color: "var(--gray-900)",
+                                    overflow: "hidden",
+                                    "text-overflow": "ellipsis",
+                                    "white-space": "nowrap",
                                   }}
                                 >
-                                  <div style={{ "min-width": "0" }}>
-                                    <div
-                                      style={{
-                                        "font-weight": "600",
-                                        "font-size": "13.5px",
-                                        color: "var(--gray-900)",
-                                        overflow: "hidden",
-                                        "text-overflow": "ellipsis",
-                                        "white-space": "nowrap",
-                                      }}
-                                    >
-                                      {member.user_name}
-                                    </div>
-                                    <div
-                                      style={{
-                                        "font-size": "12px",
-                                        color: "var(--gray-500)",
-                                        overflow: "hidden",
-                                        "text-overflow": "ellipsis",
-                                        "white-space": "nowrap",
-                                      }}
-                                    >
-                                      {member.user_email}
-                                    </div>
-                                  </div>
-
-                                  <Show when={permissions.canUpdate()}>
-                                    <button
-                                      type="button"
-                                      class="btn-icon btn-delete"
-                                      title="Hapus dari hari ini"
-                                      style={{ width: "auto", padding: "5px 10px", "font-size": "12px", "flex-shrink": "0" }}
-                                      onClick={() =>
-                                        setRemovingTarget({
-                                          userId: member.user_id,
-                                          userName: member.user_name,
-                                          day: group.day,
-                                          dayName: group.full,
-                                        })
-                                      }
-                                    >
-                                      Hapus
-                                    </button>
-                                  </Show>
+                                  {member.user_name}
                                 </div>
-                              )}
-                            </For>
-                          </div>
-                        </Show>
+                                <div
+                                  style={{
+                                    "font-size": "12px",
+                                    color: "var(--gray-500)",
+                                    overflow: "hidden",
+                                    "text-overflow": "ellipsis",
+                                    "white-space": "nowrap",
+                                  }}
+                                >
+                                  {member.user_email}
+                                </div>
+                              </div>
+
+                              <Show when={permissions.canUpdate()}>
+                                <button
+                                  type="button"
+                                  class="btn-icon btn-delete"
+                                  title="Hapus dari hari ini"
+                                  style={{
+                                    width: "auto",
+                                    padding: "5px 10px",
+                                    "font-size": "12px",
+                                    "flex-shrink": "0",
+                                  }}
+                                  onClick={() =>
+                                    setRemovingTarget({
+                                      userId: member.user_id,
+                                      userName: member.user_name,
+                                      day: group().day,
+                                      dayName: group().full,
+                                    })
+                                  }
+                                >
+                                  Hapus
+                                </button>
+                              </Show>
+                            </div>
+                          )}
+                        </For>
                       </div>
                     </Show>
                   </div>
-                );
-              }}
-            </For>
+                </div>
+              )}
+            </Show>
           </div>
         </Show>
       </Show>
