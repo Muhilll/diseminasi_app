@@ -93,7 +93,12 @@ const AttendancePage: Component = () => {
 
   const hasOpenCheckIn = createMemo(() => {
     const att = today()?.attendance;
-    return !!att && !att.check_out_time && att.check_in_status !== "legacy";
+    return (
+      !!att &&
+      !att.check_out_time &&
+      att.check_in_status !== "legacy" &&
+      att.check_out_status !== "missed_checkout"
+    );
   });
 
   const hasCompletedToday = createMemo(() => {
@@ -124,6 +129,14 @@ const AttendancePage: Component = () => {
 
     if (!c) {
       showToast("error", "GPS location is required. Please enable location access.");
+      return;
+    }
+    const setting = today()?.settings;
+    if (setting && distanceMeters() !== null && distanceMeters()! > setting.radius_meters) {
+      showToast(
+        "error",
+        `Outside allowed attendance radius (${distanceMeters()}m > ${setting.radius_meters}m)`,
+      );
       return;
     }
     if (!file) {
