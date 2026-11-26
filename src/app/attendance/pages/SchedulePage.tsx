@@ -1,4 +1,4 @@
-import { Component, For, Show, createSignal, onMount } from "solid-js";
+import { Component, For, Show, createMemo, createSignal, onMount } from "solid-js";
 import DataTable, { type DataTableColumn } from "../../../components/ui/DataTable";
 import Modal from "../../../components/ui/Modal";
 import PageHeader from "../../../components/ui/PageHeader";
@@ -9,14 +9,33 @@ import { attendanceSchedulesAPI } from "../service/attendance.api";
 import type { ScheduleDay, UserSchedule } from "../type/attendance";
 
 const DAY_NAMES = [
-  { day: 0, short: "Min", full: "Minggu (Malam Senin)" },
-  { day: 1, short: "Sen", full: "Senin (Malam Selasa)" },
-  { day: 2, short: "Sel", full: "Selasa (Malam Rabu)" },
-  { day: 3, short: "Rab", full: "Rabu (Malam Kamis)" },
-  { day: 4, short: "Kam", full: "Kamis (Malam Jumat)" },
-  { day: 5, short: "Jum", full: "Jumat (Malam Sabtu)" },
-  { day: 6, short: "Sab", full: "Sabtu (Bersih Bersama)" },
+  { day: 0, short: "Min", full: "Minggu — Malam Senin" },
+  { day: 1, short: "Sen", full: "Senin — Malam Selasa" },
+  { day: 2, short: "Sel", full: "Selasa — Malam Rabu" },
+  { day: 3, short: "Rab", full: "Rabu — Malam Kamis" },
+  { day: 4, short: "Kam", full: "Kamis — Malam Jumat" },
+  { day: 5, short: "Jum", full: "Jumat — Malam Sabtu" },
+  { day: 6, short: "Sab", full: "Sabtu — Bersih Bersama" },
 ];
+
+const IconChevron = (props: { open: boolean }) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    style={{
+      transform: props.open ? "rotate(90deg)" : "rotate(0deg)",
+      transition: "transform 0.15s ease",
+    }}
+  >
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
 
 const SchedulePage: Component = () => {
   const permissions = usePagePermissions();
@@ -25,6 +44,18 @@ const SchedulePage: Component = () => {
   const [rows, setRows] = createSignal<UserSchedule[]>([]);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const [viewMode, setViewMode] = createSignal<"by-day" | "by-user">("by-day");
+  const [openDays, setOpenDays] = createSignal<Record<number, boolean>>({
+    0: true,
+    1: true,
+    2: true,
+    3: true,
+    4: true,
+    5: true,
+    6: false,
+  });
+  const [daySearch, setDaySearch] = createSignal("");
+
   const [editingUser, setEditingUser] = createSignal<UserSchedule | null>(null);
   const [draftDays, setDraftDays] = createSignal<ScheduleDay[]>([]);
   const [isSaving, setIsSaving] = createSignal(false);
@@ -43,6 +74,31 @@ const SchedulePage: Component = () => {
 
   onMount(fetchSchedules);
 
+  const toggleDayAccordion = (day: number) => {
+    setOpenDays((prev) => ({ ...prev, [day]: !prev[day] }));
+  };
+
+  const setAllDaysOpen = (open: boolean) => {
+    setOpenDays({ 0: open, 1: open, 2: open, 3: open, 4: open, 5: open, 6: open });
+  };
+
+  const groupedByDay = createMemo(() => {
+    const query = daySearch().trim().toLowerCase();
+    return DAY_NAMES.map((meta) => {
+      const members = rows().filter((u) => {
+        const isActive = !!u.schedules.find((s) => s.day_of_week === meta.day)
+          ?.is_active;
+        if (!isActive) return false;
+        if (!query) return true;
+        return (
+          u.user_name.toLowerCase().includes(query) ||
+          u.user_email.toLowerCase().includes(query)
+        );
+      });
+      return { ...meta, members };
+    });
+  });
+
   const openEdit = (user: UserSchedule) => {
     setEditingUser(user);
     setDraftDays(
@@ -53,7 +109,7 @@ const SchedulePage: Component = () => {
     );
   };
 
-  const toggleDay = (day: number) => {
+  const toggleDraftDay = (day: number) => {
     setDraftDays((prev) =>
       prev.map((item) =>
         item.day_of_week === day ? { ...item, is_active: !item.is_active } : item,
@@ -150,6 +206,24 @@ const SchedulePage: Component = () => {
       <PageHeader
         title="Attendance Schedule"
         description="Manage weekly active attendance days for each user."
+        action={
+          <div style={{ display: "flex", gap: "8px", "flex-wrap": "wrap" }}>
+            <button
+              type="button"
+              class={viewMode() === "by-day" ? "btn-create" : "btn-secondary"}
+              onClick={() => setViewMode("by-day")}
+            >
+              Per Hari
+            </button>
+            <button
+              type="button"
+              class={viewMode() === "by-user" ? "btn-create" : "btn-secondary"}
+              onClick={() => setViewMode("by-user")}
+            >
+              Per User
+            </button>
+          </div>
+        }
       />
 
       <Show when={error()}>
@@ -170,7 +244,7 @@ const SchedulePage: Component = () => {
           </div>
 
           <form onSubmit={handleSave} class="user-form">
-            <div style={{ display: "grid", gap: "10px" }}>
+            <div style={{ "grid-column": "1 / -1", display: "grid", gap: "10px" }}>
               <For each={DAY_NAMES}>
                 {({ day, full }) => {
                   const checked = () =>
@@ -190,7 +264,7 @@ const SchedulePage: Component = () => {
                       <input
                         type="checkbox"
                         checked={checked()}
-                        onChange={() => toggleDay(day)}
+                        onChange={() => toggleDraftDay(day)}
                         disabled={isSaving()}
                       />
                       <span>{full}</span>
@@ -200,20 +274,203 @@ const SchedulePage: Component = () => {
               </For>
             </div>
 
-            <button type="submit" class="btn-submit" disabled={isSaving()}>
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSaving()}
+            >
               {isSaving() ? "Saving..." : "Save Schedule"}
             </button>
           </form>
         </div>
       </Modal>
 
-      <DataTable
-        rows={rows()}
-        columns={columns}
-        isLoading={isLoading()}
-        emptyMessage="No user schedules found."
-        itemsPerPage={10}
-      />
+      <Show when={viewMode() === "by-day"}>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "center",
+            gap: "12px",
+            "margin-bottom": "16px",
+            "flex-wrap": "wrap",
+          }}
+        >
+          <input
+            type="search"
+            class="table-search-input"
+            style={{ width: "min(100%, 300px)", padding: "0 12px" }}
+            placeholder="Cari nama atau email anggota..."
+            value={daySearch()}
+            onInput={(e) => setDaySearch(e.currentTarget.value)}
+          />
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              class="btn-secondary"
+              onClick={() => setAllDaysOpen(true)}
+            >
+              Buka Semua
+            </button>
+            <button
+              type="button"
+              class="btn-secondary"
+              onClick={() => setAllDaysOpen(false)}
+            >
+              Tutup Semua
+            </button>
+          </div>
+        </div>
+
+        <Show when={isLoading()}>
+          <div class="form-section">Loading schedules...</div>
+        </Show>
+
+        <Show when={!isLoading()}>
+          <div style={{ display: "grid", gap: "12px" }}>
+            <For each={groupedByDay()}>
+              {(group) => {
+                const isOpen = () => !!openDays()[group.day];
+                return (
+                  <div class="app-table-card">
+                    <button
+                      type="button"
+                      onClick={() => toggleDayAccordion(group.day)}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        "align-items": "center",
+                        "justify-content": "space-between",
+                        padding: "16px 20px",
+                        background: isOpen() ? "var(--gray-50)" : "#fff",
+                        border: "none",
+                        cursor: "pointer",
+                        "text-align": "left",
+                        "font-family": "inherit",
+                      }}
+                    >
+                      <div style={{ display: "flex", "align-items": "center", gap: "10px" }}>
+                        <IconChevron open={isOpen()} />
+                        <strong style={{ "font-size": "15px", color: "var(--gray-900)" }}>
+                          {group.full}
+                        </strong>
+                      </div>
+                      <span
+                        style={{
+                          padding: "3px 10px",
+                          "border-radius": "999px",
+                          "font-size": "12px",
+                          "font-weight": "600",
+                          background: "var(--green-100)",
+                          color: "var(--green-800)",
+                        }}
+                      >
+                        {group.members.length} anggota
+                      </span>
+                    </button>
+
+                    <Show when={isOpen()}>
+                      <div
+                        style={{
+                          padding: "14px 20px 18px",
+                          "border-top": "1px solid var(--gray-100)",
+                        }}
+                      >
+                        <Show
+                          when={group.members.length > 0}
+                          fallback={
+                            <div style={{ color: "var(--gray-400)", "font-size": "13px" }}>
+                              Tidak ada anggota terjadwal di hari ini.
+                            </div>
+                          }
+                        >
+                          <div
+                            style={{
+                              display: "grid",
+                              "grid-template-columns": "repeat(auto-fill, minmax(260px, 1fr))",
+                              gap: "10px",
+                            }}
+                          >
+                            <For each={group.members}>
+                              {(member) => (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    "align-items": "center",
+                                    "justify-content": "space-between",
+                                    gap: "10px",
+                                    padding: "10px 14px",
+                                    border: "1px solid var(--gray-200)",
+                                    "border-radius": "8px",
+                                    background: "#fff",
+                                  }}
+                                >
+                                  <div style={{ "min-width": "0" }}>
+                                    <div
+                                      style={{
+                                        "font-weight": "600",
+                                        "font-size": "13.5px",
+                                        color: "var(--gray-900)",
+                                        overflow: "hidden",
+                                        "text-overflow": "ellipsis",
+                                        "white-space": "nowrap",
+                                      }}
+                                    >
+                                      {member.user_name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        "font-size": "12px",
+                                        color: "var(--gray-500)",
+                                        overflow: "hidden",
+                                        "text-overflow": "ellipsis",
+                                        "white-space": "nowrap",
+                                      }}
+                                    >
+                                      {member.user_email}
+                                    </div>
+                                  </div>
+
+                                  <Show when={permissions.canUpdate()}>
+                                    <button
+                                      type="button"
+                                      class="btn-secondary"
+                                      style={{
+                                        padding: "5px 10px",
+                                        "font-size": "12px",
+                                        "flex-shrink": "0",
+                                      }}
+                                      onClick={() => openEdit(member)}
+                                    >
+                                      Edit
+                                    </button>
+                                  </Show>
+                                </div>
+                              )}
+                            </For>
+                          </div>
+                        </Show>
+                      </div>
+                    </Show>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
+      </Show>
+
+      <Show when={viewMode() === "by-user"}>
+        <DataTable
+          rows={rows()}
+          columns={columns}
+          isLoading={isLoading()}
+          emptyMessage="No user schedules found."
+          itemsPerPage={10}
+        />
+      </Show>
     </div>
   );
 };
