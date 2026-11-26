@@ -8,6 +8,7 @@ import Footer from "./Footer";
 import {
   clearNavigationStorage,
   filterReadableMenus,
+  findMatchingNavigationItem,
   getNavigationFromStorage,
   hasReadablePathAccess,
   navigationAPI,
@@ -32,7 +33,14 @@ const Layout: Component<LayoutProps> = (props) => {
   const [isNavLoading, setIsNavLoading] = createSignal(false);
   const [navError, setNavError] = createSignal<string | null>(null);
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    const normalizedTarget = path.replace(/\/+$/, "") || "/";
+    const matched = findMatchingNavigationItem(location.pathname, navItems());
+    if (matched) {
+      return (matched.path?.replace(/\/+$/, "") || "/") === normalizedTarget;
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
   const fallbackPath = createMemo(() => navItems().find((item) => item.path)?.path || "/dashboard");
 
   const fetchNavigation = async () => {
