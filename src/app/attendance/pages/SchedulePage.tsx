@@ -288,23 +288,63 @@ const SchedulePage: Component = () => {
 
       <Show when={viewMode() === "by-day"}>
         <div
+          class="form-section"
           style={{
+            padding: "14px 20px",
+            "margin-bottom": "16px",
             display: "flex",
             "justify-content": "space-between",
             "align-items": "center",
             gap: "12px",
-            "margin-bottom": "16px",
             "flex-wrap": "wrap",
           }}
         >
-          <input
-            type="search"
-            class="table-search-input"
-            style={{ width: "min(100%, 300px)", padding: "0 12px" }}
-            placeholder="Cari nama atau email anggota..."
-            value={daySearch()}
-            onInput={(e) => setDaySearch(e.currentTarget.value)}
-          />
+          <div style={{ position: "relative", width: "min(100%, 320px)" }}>
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--gray-400)",
+                display: "flex",
+                "pointer-events": "none",
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              placeholder="Cari nama atau email anggota..."
+              value={daySearch()}
+              onInput={(e) => setDaySearch(e.currentTarget.value)}
+              style={{
+                width: "100%",
+                height: "38px",
+                padding: "0 12px 0 36px",
+                border: "1px solid var(--gray-200)",
+                "border-radius": "var(--radius-sm)",
+                background: "var(--gray-50)",
+                color: "var(--gray-900)",
+                "font-size": "13.5px",
+                "font-family": "inherit",
+                outline: "none",
+              }}
+            />
+          </div>
 
           <div style={{ display: "flex", gap: "8px" }}>
             <button
