@@ -49,6 +49,29 @@ export interface AttendanceRecord {
   };
 }
 
+export interface AttendanceLeave {
+  id: number;
+  user_id: number;
+  leave_date: string;
+  reason: string;
+  attachment: string | null;
+  attachment_public_id: string | null;
+  status: "pending" | "approved" | "rejected" | string;
+  reviewed_by: number | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  reviewer?: {
+    id: number;
+    name: string | null;
+  } | null;
+}
+
 export interface TodayAttendanceStatus {
   server_time: string;
   today_date: string;
@@ -59,6 +82,7 @@ export interface TodayAttendanceStatus {
     day_of_week: number;
     is_active: boolean;
   };
+  today_leave?: AttendanceLeave | null;
   attendance: AttendanceRecord | null;
 }
 

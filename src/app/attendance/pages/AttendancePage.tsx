@@ -7,9 +7,13 @@ import Toast from "../../../components/ui/Toast";
 import { usePagePermissions } from "../../../hooks/usePagePermissions";
 import { useToast } from "../../../hooks/useToast";
 import { uploadImageWithSignature } from "../../../services/uploads";
-import { attendanceAPI } from "../service/attendance.api";
-import type { AttendanceRecord, TodayAttendanceStatus } from "../type/attendance";
-import { createAttendanceColumns } from "./attendance.columns";
+import { attendanceAPI, attendanceLeavesAPI } from "../service/attendance.api";
+import type {
+  AttendanceLeave,
+  AttendanceRecord,
+  TodayAttendanceStatus,
+} from "../type/attendance";
+import { createAttendanceColumns, createLeaveColumns } from "./attendance.columns";
 
 const DAY_TABS = [
   { key: "all", label: "Semua", day: null },
@@ -43,9 +47,24 @@ const AttendancePage: Component = () => {
   const { toast, showToast, clearToast } = useToast();
 
   const [records, setRecords] = createSignal<AttendanceRecord[]>([]);
+  const [leaves, setLeaves] = createSignal<AttendanceLeave[]>([]);
   const [today, setToday] = createSignal<TodayAttendanceStatus | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const [sectionTab, setSectionTab] = createSignal<"history" | "leaves">("history");
+
+  const [leaveModalOpen, setLeaveModalOpen] = createSignal(false);
+  const [leaveDate, setLeaveDate] = createSignal("");
+  const [leaveReason, setLeaveReason] = createSignal("");
+  const [leaveFile, setLeaveFile] = createSignal<File | null>(null);
+  const [isSubmittingLeave, setIsSubmittingLeave] = createSignal(false);
+
+  const [reviewTarget, setReviewTarget] = createSignal<{
+    leave: AttendanceLeave;
+    action: "approve" | "reject";
+  } | null>(null);
+  const [reviewNote, setReviewNote] = createSignal("");
+  const [isReviewing, setIsReviewing] = createSignal(false);
 
   const [coords, setCoords] = createSignal<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = createSignal<string | null>(null);
@@ -118,9 +137,10 @@ const AttendancePage: Component = () => {
   const fetchData = async () => {
     setIsLoading(true);
     setError(null);
-    const [todayRes, listRes] = await Promise.all([
+    const [todayRes, listRes, leavesRes] = await Promise.all([
       attendanceAPI.getToday(),
       attendanceAPI.getAll(),
+      attendanceLeavesAPI.getAll(),
     ]);
 
     if (todayRes.success && todayRes.data) {
@@ -130,6 +150,9 @@ const AttendancePage: Component = () => {
       setRecords(listRes.data);
     } else if (!listRes.success) {
       setError(listRes.error || "Failed to load attendances");
+    }
+    if (leavesRes.success && leavesRes.data) {
+      setLeaves(leavesRes.data);
     }
     setIsLoading(false);
   };
@@ -174,12 +197,90 @@ const AttendancePage: Component = () => {
     return dist !== null && !!s && dist <= s.radius_meters;
   });
 
+  const isApprovedLeaveToday = createMemo(() => {
+    const att = today()?.attendance;
+    const leave = today()?.today_leave;
+    return att?.check_in_status === "izin" || leave?.status === "approved";
+  });
+
+  const pendingLeavesCount = createMemo(
+    () => leaves().filter((l) => l.status === "pending").length,
+  );
+
   const checkInDisabledReason = createMemo(() => {
+    if (isApprovedLeaveToday()) return "Izin disetujui untuk hari ini";
     if (!today()?.schedule?.is_active) return "Tidak ada jadwal aktif hari ini";
     if (!coords()) return "Lokasi GPS belum tersedia";
     if (!isInsideRadius()) return "Anda berada di luar radius absensi";
     return null;
   });
+
+  const openLeaveModal = () => {
+    setLeaveDate(today()?.today_date || "");
+    setLeaveReason("");
+    setLeaveFile(null);
+    setLeaveModalOpen(true);
+  };
+
+  const handleLeaveSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (!leaveDate() || !leaveReason().trim()) {
+      showToast("error", "Tanggal dan alasan izin wajib diisi");
+      return;
+    }
+
+    setIsSubmittingLeave(true);
+    try {
+      let attachment: string | undefined;
+      let attachment_public_id: string | undefined;
+      const file = leaveFile();
+      if (file) {
+        const uploaded = await uploadImageWithSignature("attendance", file);
+        attachment = uploaded.secureUrl;
+        attachment_public_id = uploaded.publicId;
+      }
+
+      const res = await attendanceLeavesAPI.submit({
+        leave_date: leaveDate(),
+        reason: leaveReason().trim(),
+        attachment,
+        attachment_public_id,
+      });
+
+      if (res.success) {
+        setLeaveModalOpen(false);
+        await fetchData();
+        showToast("success", res.message || "Pengajuan izin berhasil dikirim");
+      } else {
+        showToast("error", res.error || "Gagal mengajukan izin");
+      }
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setIsSubmittingLeave(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e: Event) => {
+    e.preventDefault();
+    const target = reviewTarget();
+    if (!target) return;
+
+    setIsReviewing(true);
+    const res = await attendanceLeavesAPI.review(target.leave.id, {
+      action: target.action,
+      review_note: reviewNote().trim() || undefined,
+    });
+    if (res.success) {
+      setReviewTarget(null);
+      setReviewNote("");
+      await fetchData();
+      showToast("success", res.message || "Review izin disimpan");
+    } else {
+      showToast("error", res.error || "Gagal memproses izin");
+    }
+    setIsReviewing(false);
+  };
 
   const checkOutDisabledReason = createMemo(() => {
     if (!hasOpenCheckIn()) return "Lakukan Absen Masuk terlebih dahulu";
@@ -271,13 +372,46 @@ const AttendancePage: Component = () => {
     }),
   );
 
+  const leaveColumns = createMemo(() =>
+    createLeaveColumns({
+      canReview: permissions.canReport(),
+      onReview: (leave, action) => {
+        setReviewNote("");
+        setReviewTarget({ leave, action });
+      },
+    }),
+  );
+
   return (
     <div class="user-page">
       <Toast toast={toast()} onClose={clearToast} />
 
       <PageHeader
         title="Attendance"
-        description="Check in and check out using your current location and photo evidence."
+        description="Check in, check out, or submit leave (Izin) for scheduled days."
+        action={
+          <div style={{ display: "flex", gap: "8px", "flex-wrap": "wrap" }}>
+            <Show when={permissions.canCreate()}>
+              <button type="button" class="btn-secondary" onClick={openLeaveModal}>
+                Ajukan Izin
+              </button>
+            </Show>
+            <button
+              type="button"
+              class={sectionTab() === "history" ? "btn-create" : "btn-secondary"}
+              onClick={() => setSectionTab("history")}
+            >
+              Riwayat Absensi
+            </button>
+            <button
+              type="button"
+              class={sectionTab() === "leaves" ? "btn-create" : "btn-secondary"}
+              onClick={() => setSectionTab("leaves")}
+            >
+              Pengajuan Izin ({pendingLeavesCount()})
+            </button>
+          </div>
+        }
       />
 
       <Show when={error()}>
@@ -388,37 +522,46 @@ const AttendancePage: Component = () => {
               1. Absen Masuk (Check-In)
             </div>
             <Show
-              when={hasOpenCheckIn() || hasCompletedToday()}
+              when={isApprovedLeaveToday()}
               fallback={
-                <>
-                  <Show when={permissions.canCreate()}>
-                    <button
-                      type="button"
-                      class="btn-create"
-                      style={{
-                        width: "100%",
-                        "justify-content": "center",
-                        ...(checkInDisabledReason()
-                          ? { opacity: "0.45", cursor: "not-allowed" }
-                          : {}),
-                      }}
-                      disabled={!!checkInDisabledReason()}
-                      onClick={() => openModal("check-in")}
-                    >
-                      Absen Masuk (Check-In)
-                    </button>
-                  </Show>
-                  <Show when={checkInDisabledReason()}>
-                    <small style={{ color: "var(--gray-500)", "font-size": "12px" }}>
-                      {checkInDisabledReason()}
-                    </small>
-                  </Show>
-                </>
+                <Show
+                  when={hasOpenCheckIn() || hasCompletedToday()}
+                  fallback={
+                    <>
+                      <Show when={permissions.canCreate()}>
+                        <button
+                          type="button"
+                          class="btn-create"
+                          style={{
+                            width: "100%",
+                            "justify-content": "center",
+                            ...(checkInDisabledReason()
+                              ? { opacity: "0.45", cursor: "not-allowed" }
+                              : {}),
+                          }}
+                          disabled={!!checkInDisabledReason()}
+                          onClick={() => openModal("check-in")}
+                        >
+                          Absen Masuk (Check-In)
+                        </button>
+                      </Show>
+                      <Show when={checkInDisabledReason()}>
+                        <small style={{ color: "var(--gray-500)", "font-size": "12px" }}>
+                          {checkInDisabledReason()}
+                        </small>
+                      </Show>
+                    </>
+                  }
+                >
+                  <div style={{ "font-size": "13px", color: "var(--green-700)", "font-weight": "600" }}>
+                    Sudah Absen Masuk ({today()?.attendance?.attendance_date}) —{" "}
+                    {today()?.attendance?.check_in_status === "late" ? "Late" : "On Time"}
+                  </div>
+                </Show>
               }
             >
-              <div style={{ "font-size": "13px", color: "var(--green-700)", "font-weight": "600" }}>
-                Sudah Absen Masuk ({today()?.attendance?.attendance_date}) —{" "}
-                {today()?.attendance?.check_in_status === "late" ? "Late" : "On Time"}
+              <div style={{ "font-size": "13px", color: "#1e40af", "font-weight": "600" }}>
+                Izin Disetujui Hari Ini
               </div>
             </Show>
           </div>
@@ -554,7 +697,146 @@ const AttendancePage: Component = () => {
         onCancel={() => setDeletingId(null)}
       />
 
-      <Show
+      <Modal open={leaveModalOpen()} onClose={() => setLeaveModalOpen(false)}>
+        <div class="form-section">
+          <div class="form-section-header">
+            <h2>Ajukan Izin</h2>
+            <button
+              type="button"
+              class="btn-secondary"
+              onClick={() => setLeaveModalOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleLeaveSubmit} class="user-form">
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="leave_date">Tanggal Jadwal</label>
+              <input
+                id="leave_date"
+                type="date"
+                min={today()?.today_date || undefined}
+                value={leaveDate()}
+                onChange={(e) => setLeaveDate(e.currentTarget.value)}
+                required
+                disabled={isSubmittingLeave()}
+              />
+              <small class="form-helper-text">
+                Hanya dapat memilih hari ini atau tanggal ke depan yang sesuai jadwal aktif Anda.
+              </small>
+            </div>
+
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="leave_reason">Alasan / Keterangan</label>
+              <textarea
+                id="leave_reason"
+                class="form-textarea"
+                rows={3}
+                value={leaveReason()}
+                onInput={(e) => setLeaveReason(e.currentTarget.value)}
+                placeholder="Tuliskan alasan izin..."
+                required
+                disabled={isSubmittingLeave()}
+              />
+            </div>
+
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="leave_attachment">Bukti Foto (Opsional)</label>
+              <div class="file-input-field">
+                <label for="leave_attachment" class="file-input-button">
+                  Choose Image
+                </label>
+                <span class="file-input-name">
+                  {leaveFile()?.name || "No file chosen"}
+                </span>
+                <input
+                  id="leave_attachment"
+                  class="file-input-native"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setLeaveFile(e.currentTarget.files?.[0] || null)}
+                  disabled={isSubmittingLeave()}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isSubmittingLeave()}
+            >
+              {isSubmittingLeave() ? "Mengirim..." : "Kirim Pengajuan Izin"}
+            </button>
+          </form>
+        </div>
+      </Modal>
+
+      <Modal open={!!reviewTarget()} onClose={() => setReviewTarget(null)}>
+        <div class="form-section">
+          <div class="form-section-header">
+            <h2>
+              {reviewTarget()?.action === "approve" ? "Approve Izin" : "Reject Izin"} —{" "}
+              {reviewTarget()?.leave.user?.name}
+            </h2>
+            <button
+              type="button"
+              class="btn-secondary"
+              onClick={() => setReviewTarget(null)}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleReviewSubmit} class="user-form">
+            <div style={{ "grid-column": "1 / -1", "font-size": "13.5px", color: "var(--gray-700)" }}>
+              <strong>Tanggal:</strong> {reviewTarget()?.leave.leave_date}
+              <br />
+              <strong>Alasan:</strong> {reviewTarget()?.leave.reason}
+            </div>
+
+            <div class="form-group" style={{ "grid-column": "1 / -1" }}>
+              <label for="review_note">Catatan Reviewer (Opsional)</label>
+              <textarea
+                id="review_note"
+                class="form-textarea"
+                rows={3}
+                value={reviewNote()}
+                onInput={(e) => setReviewNote(e.currentTarget.value)}
+                placeholder="Catatan..."
+                disabled={isReviewing()}
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit"
+              style={{ "grid-column": "1 / -1" }}
+              disabled={isReviewing()}
+            >
+              {isReviewing()
+                ? "Memproses..."
+                : reviewTarget()?.action === "approve"
+                  ? "Konfirmasi Approve"
+                  : "Konfirmasi Reject"}
+            </button>
+          </form>
+        </div>
+      </Modal>
+
+      <Show when={sectionTab() === "leaves"}>
+        <DataTable
+          rows={leaves()}
+          columns={leaveColumns()}
+          isLoading={isLoading()}
+          emptyMessage="Belum ada pengajuan izin."
+          itemsPerPage={10}
+        />
+      </Show>
+
+      <Show when={sectionTab() === "history"}>
+        <Show
         when={permissions.canReport()}
         fallback={
           <DataTable
@@ -683,6 +965,7 @@ const AttendancePage: Component = () => {
             itemsPerPage={10}
           />
         </div>
+      </Show>
       </Show>
     </div>
   );
