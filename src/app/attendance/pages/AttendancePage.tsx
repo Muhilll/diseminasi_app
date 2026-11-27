@@ -198,7 +198,6 @@ const AttendancePage: Component = () => {
     if (isApprovedLeaveToday()) return "Izin disetujui untuk hari ini";
     if (!canCheckInSchedule()) return "Tidak ada jadwal aktif hari ini";
     if (!coords()) return "Lokasi GPS belum tersedia";
-    if (!isInsideRadius()) return "Anda berada di luar radius absensi";
     return null;
   });
 
@@ -272,7 +271,6 @@ const AttendancePage: Component = () => {
   const checkOutDisabledReason = createMemo(() => {
     if (!hasOpenCheckIn()) return "Lakukan Absen Masuk terlebih dahulu";
     if (!coords()) return "Lokasi GPS belum tersedia";
-    if (!isInsideRadius()) return "Anda berada di luar radius absensi";
     return null;
   });
 
@@ -292,14 +290,6 @@ const AttendancePage: Component = () => {
 
     if (!c) {
       showToast("error", "GPS location is required. Please enable location access.");
-      return;
-    }
-    const setting = today()?.settings;
-    if (setting && distanceMeters() !== null && distanceMeters()! > setting.radius_meters) {
-      showToast(
-        "error",
-        `Outside allowed attendance radius (${distanceMeters()}m > ${setting.radius_meters}m)`,
-      );
       return;
     }
     if (!file) {

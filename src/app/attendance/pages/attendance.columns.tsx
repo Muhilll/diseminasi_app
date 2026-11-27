@@ -25,6 +25,8 @@ const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }>
   on_time: { label: "On Time", bg: "#dcfce7", color: "#166534" },
   late: { label: "Late", bg: "#fef3c7", color: "#92400e" },
   late_checkout: { label: "Late Checkout", bg: "#fef3c7", color: "#92400e" },
+  outside_radius: { label: "Luar Radius", bg: "#ffedd5", color: "#9a3412" },
+  late_outside_radius: { label: "Late (Luar Radius)", bg: "#fee2e2", color: "#991b1b" },
   missed_checkout: { label: "Missed Checkout", bg: "#fee2e2", color: "#991b1b" },
   izin: { label: "Izin", bg: "#dbeafe", color: "#1e40af" },
   legacy: { label: "Legacy", bg: "#f3f4f6", color: "#4b5563" },
