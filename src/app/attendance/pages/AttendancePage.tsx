@@ -175,7 +175,7 @@ const AttendancePage: Component = () => {
       !!att &&
       !att.check_out_time &&
       att.check_in_status !== "legacy" &&
-      att.check_out_status !== "missed_checkout"
+      att.check_in_status !== "izin"
     );
   });
 
