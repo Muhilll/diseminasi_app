@@ -41,12 +41,36 @@ export interface AttendanceRecord {
   check_out_status: "on_time" | "late_checkout" | "missed_checkout" | string | null;
   created_at: string;
   updated_at: string;
+  schedule_days?: number[];
   user?: {
     id: number;
     name: string;
     email: string;
     employee_id: string | null;
   };
+}
+
+export interface AttendanceLeave {
+  id: number;
+  user_id: number;
+  leave_date: string;
+  reason: string;
+  attachment: string | null;
+  attachment_public_id: string | null;
+  status: "pending" | "approved" | "rejected" | string;
+  reviewed_by: number | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  reviewer?: {
+    id: number;
+    name: string | null;
+  } | null;
 }
 
 export interface TodayAttendanceStatus {
@@ -59,6 +83,9 @@ export interface TodayAttendanceStatus {
     day_of_week: number;
     is_active: boolean;
   };
+  can_check_in?: boolean;
+  check_in_target_date?: string | null;
+  today_leave?: AttendanceLeave | null;
   attendance: AttendanceRecord | null;
 }
 

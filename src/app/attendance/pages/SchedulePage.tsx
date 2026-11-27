@@ -16,7 +16,6 @@ const DAY_NAMES = [
   { day: 3, short: "Rab", tab: "Rabu", full: "Rabu — Malam Kamis" },
   { day: 4, short: "Kam", tab: "Kamis", full: "Kamis — Malam Jumat" },
   { day: 5, short: "Jum", tab: "Jumat", full: "Jumat — Malam Sabtu" },
-  { day: 6, short: "Sab", tab: "Sabtu", full: "Sabtu — Bersih Bersama" },
 ];
 
 const SchedulePage: Component = () => {
@@ -90,20 +89,19 @@ const SchedulePage: Component = () => {
     );
   };
 
-  const toggleDraftDay = (day: number) => {
-    setDraftDays((prev) =>
-      prev.map((item) =>
-        item.day_of_week === day ? { ...item, is_active: !item.is_active } : item,
-      ),
+  const selectDraftDay = (selectedDay: number | null) => {
+    setDraftDays(
+      DAY_NAMES.map(({ day }) => ({
+        day_of_week: day,
+        is_active: selectedDay !== null && day === selectedDay,
+      })),
     );
   };
 
   const availableUsersForAddDay = createMemo(() => {
     const target = addingDay();
     if (!target) return [];
-    return rows().filter(
-      (u) => !u.schedules.find((s) => s.day_of_week === target.day)?.is_active,
-    );
+    return rows().filter((u) => !u.schedules.some((s) => s.is_active));
   });
 
   const openAddModal = (day: number, full: string, e: MouseEvent) => {
@@ -279,6 +277,26 @@ const SchedulePage: Component = () => {
 
           <form onSubmit={handleSave} class="user-form">
             <div style={{ "grid-column": "1 / -1", display: "grid", gap: "10px" }}>
+              <label
+                style={{
+                  display: "flex",
+                  "align-items": "center",
+                  gap: "10px",
+                  padding: "10px 12px",
+                  border: "1px solid var(--gray-200)",
+                  "border-radius": "8px",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="user_schedule_day"
+                  checked={!draftDays().some((d) => d.is_active)}
+                  onChange={() => selectDraftDay(null)}
+                  disabled={isSaving()}
+                />
+                <span>Tidak ada jadwal</span>
+              </label>
               <For each={DAY_NAMES}>
                 {({ day, full }) => {
                   const checked = () =>
@@ -296,9 +314,10 @@ const SchedulePage: Component = () => {
                       }}
                     >
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name="user_schedule_day"
                         checked={checked()}
-                        onChange={() => toggleDraftDay(day)}
+                        onChange={() => selectDraftDay(day)}
                         disabled={isSaving()}
                       />
                       <span>{full}</span>

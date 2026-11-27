@@ -100,5 +100,10 @@ export const api = {
           ? body
           : JSON.stringify(body),
     }),
+  patch: <T>(endpoint: string, body: unknown) =>
+    apiCall<T>(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   delete: <T>(endpoint: string) => apiCall<T>(endpoint, { method: "DELETE" }),
 };
