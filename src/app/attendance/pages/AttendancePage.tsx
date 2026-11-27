@@ -23,7 +23,6 @@ const DAY_TABS = [
   { key: "3", label: "Rabu", day: 3 },
   { key: "4", label: "Kamis", day: 4 },
   { key: "5", label: "Jumat", day: 5 },
-  { key: "6", label: "Sabtu", day: 6 },
 ] as const;
 
 function getDayOfWeekFromDateStr(dateStr: string): number {
