@@ -16,7 +16,6 @@ const DAY_NAMES = [
   { day: 3, short: "Rab", tab: "Rabu", full: "Rabu — Malam Kamis" },
   { day: 4, short: "Kam", tab: "Kamis", full: "Kamis — Malam Jumat" },
   { day: 5, short: "Jum", tab: "Jumat", full: "Jumat — Malam Sabtu" },
-  { day: 6, short: "Sab", tab: "Sabtu", full: "Sabtu — Bersih Bersama" },
 ];
 
 const SchedulePage: Component = () => {
