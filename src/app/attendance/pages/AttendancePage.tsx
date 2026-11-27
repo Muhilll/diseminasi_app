@@ -207,9 +207,13 @@ const AttendancePage: Component = () => {
     () => leaves().filter((l) => l.status === "pending").length,
   );
 
+  const canCheckInSchedule = createMemo(
+    () => !!(today()?.can_check_in ?? today()?.schedule?.is_active),
+  );
+
   const checkInDisabledReason = createMemo(() => {
     if (isApprovedLeaveToday()) return "Izin disetujui untuk hari ini";
-    if (!today()?.schedule?.is_active) return "Tidak ada jadwal aktif hari ini";
+    if (!canCheckInSchedule()) return "Tidak ada jadwal aktif hari ini";
     if (!coords()) return "Lokasi GPS belum tersedia";
     if (!isInsideRadius()) return "Anda berada di luar radius absensi";
     return null;
@@ -440,12 +444,16 @@ const AttendancePage: Component = () => {
               Today ({today()?.today_date || "-"}) —{" "}
               <span
                 style={{
-                  color: today()?.schedule?.is_active
+                  color: canCheckInSchedule()
                     ? "var(--green-700)"
                     : "var(--red-600)",
                 }}
               >
-                {today()?.schedule?.is_active ? "Jadwal Aktif" : "Tidak Ada Jadwal (Off)"}
+                {today()?.schedule?.is_active
+                  ? "Jadwal Aktif"
+                  : canCheckInSchedule()
+                    ? `Jadwal Lintas Hari (${today()?.check_in_target_date})`
+                    : "Tidak Ada Jadwal (Off)"}
               </span>
             </div>
 

@@ -82,6 +82,8 @@ export interface TodayAttendanceStatus {
     day_of_week: number;
     is_active: boolean;
   };
+  can_check_in?: boolean;
+  check_in_target_date?: string | null;
   today_leave?: AttendanceLeave | null;
   attendance: AttendanceRecord | null;
 }
