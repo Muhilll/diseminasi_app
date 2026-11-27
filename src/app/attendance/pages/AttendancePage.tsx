@@ -25,12 +25,6 @@ const DAY_TABS = [
   { key: "5", label: "Jumat", day: 5 },
 ] as const;
 
-function getDayOfWeekFromDateStr(dateStr: string): number {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return -1;
-  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-}
-
 const AttendancePage: Component = () => {
   const permissions = usePagePermissions();
   const { toast, showToast, clearToast } = useToast();
@@ -77,15 +71,15 @@ const AttendancePage: Component = () => {
       "3": [],
       "4": [],
       "5": [],
-      "6": [],
     };
 
     for (const r of records()) {
       if (date && r.attendance_date !== date) continue;
       buckets.all.push(r);
-      const dow = getDayOfWeekFromDateStr(r.attendance_date);
-      if (dow >= 0 && dow <= 6) {
-        buckets[String(dow)].push(r);
+      for (const dow of r.schedule_days ?? []) {
+        if (dow >= 0 && dow <= 5) {
+          buckets[String(dow)].push(r);
+        }
       }
     }
 

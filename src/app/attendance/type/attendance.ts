@@ -41,6 +41,7 @@ export interface AttendanceRecord {
   check_out_status: "on_time" | "late_checkout" | "missed_checkout" | string | null;
   created_at: string;
   updated_at: string;
+  schedule_days?: number[];
   user?: {
     id: number;
     name: string;
