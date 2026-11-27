@@ -1,6 +1,6 @@
 import type { DataTableColumn } from "../../../components/ui/DataTable";
 import { formatDate } from "../../../utils/helpers";
-import type { AttendanceLeave, AttendanceRecord } from "../type/attendance";
+import type { AttendanceLeave, AttendanceRecord, AttendanceSetting } from "../type/attendance";
 
 const IconTrash = () => (
   <svg
@@ -72,9 +72,30 @@ function StatusBadge(props: { status: string | null }) {
   );
 }
 
+export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistanceLabel(
+  lat: number | null,
+  lng: number | null,
+  settings: AttendanceSetting | null | undefined,
+): string | null {
+  if (lat === null || lng === null || !settings) return null;
+  const meters = Math.round(haversineMeters(lat, lng, settings.latitude, settings.longitude));
+  return `${meters} m`;
+}
+
 export const createAttendanceColumns = (params: {
   canDelete: boolean;
   onDelete: (id: string) => void;
+  settings?: AttendanceSetting | null;
 }): DataTableColumn<AttendanceRecord>[] => [
   { header: "No", cell: (_, index) => <>{index + 1}</> },
   {
@@ -104,6 +125,11 @@ export const createAttendanceColumns = (params: {
         <div>
           <div style={{ "font-weight": "600" }}>{formatTime(row.check_in_time)}</div>
           <StatusBadge status={row.check_in_status} />
+          {formatDistanceLabel(row.check_in_lat, row.check_in_lng, params.settings) && (
+            <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
+              Jarak: {formatDistanceLabel(row.check_in_lat, row.check_in_lng, params.settings)}
+            </div>
+          )}
           {row.check_in_note && (
             <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
               {row.check_in_note}
@@ -130,6 +156,11 @@ export const createAttendanceColumns = (params: {
         <div>
           <div style={{ "font-weight": "600" }}>{formatTime(row.check_out_time)}</div>
           <StatusBadge status={row.check_out_status} />
+          {formatDistanceLabel(row.check_out_lat, row.check_out_lng, params.settings) && (
+            <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
+              Jarak: {formatDistanceLabel(row.check_out_lat, row.check_out_lng, params.settings)}
+            </div>
+          )}
           {row.check_out_note && (
             <div style={{ "font-size": "12px", color: "var(--gray-500)" }}>
               {row.check_out_note}

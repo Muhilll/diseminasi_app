@@ -13,7 +13,7 @@ import type {
   AttendanceRecord,
   TodayAttendanceStatus,
 } from "../type/attendance";
-import { createAttendanceColumns, createLeaveColumns } from "./attendance.columns";
+import { createAttendanceColumns, createLeaveColumns, haversineMeters } from "./attendance.columns";
 
 const DAY_TABS = [
   { key: "all", label: "Semua", day: null },
@@ -30,16 +30,6 @@ function getDayOfWeekFromDateStr(dateStr: string): number {
   const [y, m, d] = dateStr.split("-").map(Number);
   if (!y || !m || !d) return -1;
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-}
-
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 const AttendancePage: Component = () => {
@@ -373,6 +363,7 @@ const AttendancePage: Component = () => {
     createAttendanceColumns({
       canDelete: permissions.canDelete(),
       onDelete: (id) => setDeletingId(id),
+      settings: today()?.settings ?? null,
     }),
   );
 
